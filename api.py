@@ -54,7 +54,7 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/import", dependencies=[Depends(verify_import_api_key)])
+@app.post("/import")
 def import_document(
     file: UploadFile = File(..., description="Sales PDF, .csv, .xlsx, or .xlsm"),
     dry_run: bool = Query(
@@ -69,11 +69,6 @@ def import_document(
     _ensure_dotenv()
     name = file.filename or "upload"
     suffix = Path(name).suffix.lower()
-    if suffix not in _ALLOWED_SUFFIXES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported file type {suffix!r}. Allowed: {sorted(_ALLOWED_SUFFIXES)}",
-        )
 
     tmp_path: Path | None = None
     try:
