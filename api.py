@@ -14,10 +14,14 @@ Environment (see .env.example):
 
 from __future__ import annotations
 
+import logging
 import os
 import tempfile
 from pathlib import Path
 from typing import Annotated
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -61,6 +65,7 @@ def verify_import_api_key(
 
 @app.get("/health")
 def health() -> dict[str, str]:
+    logger.info("Health check requested")
     return {"status": "ok"}
 
 
@@ -76,32 +81,46 @@ def import_document(
         description="Excel worksheet name (optional; else EXCEL_SHEET or first sheet).",
     ),
 ) -> dict:
+    logger.info(f"Import started - filename: {file.filename}, dry_run: {dry_run}, sheet: {sheet}")
     _ensure_dotenv()
     name = file.filename or "upload"
     suffix = Path(name).suffix.lower()
+    logger.info(f"File suffix detected: {suffix}")
 
     tmp_path: Path | None = None
     try:
+        logger.info("Reading file data...")
         data = file.file.read()
+        logger.info(f"File size: {len(data)} bytes")
         if not data:
+            logger.error("Empty file received")
             raise HTTPException(status_code=400, detail="Empty file")
         fd, raw = tempfile.mkstemp(suffix=suffix)
         os.close(fd)
         tmp_path = Path(raw)
         tmp_path.write_bytes(data)
+        logger.info(f"Temp file created: {tmp_path}")
 
-        return run_import(tmp_path, write_db=not dry_run, excel_sheet=sheet)
-    except HTTPException:
+        logger.info("Calling run_import...")
+        result = run_import(tmp_path, write_db=not dry_run, excel_sheet=sheet)
+        logger.info(f"Import successful - lines: {result.get('line_count', 0)}, items_inserted: {result.get('items_inserted', 0)}")
+        return result
+    except HTTPException as e:
+        logger.error(f"HTTPException: {e.status_code} - {e.detail}")
         raise
     except FileNotFoundError as e:
+        logger.error(f"FileNotFoundError: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
     except RuntimeError as e:
+        logger.error(f"RuntimeError: {e}")
         raise HTTPException(status_code=503, detail=str(e)) from e
     except Exception as e:
+        logger.error(f"Unexpected error: {type(e).__name__}: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
     finally:
         if tmp_path is not None:
             tmp_path.unlink(missing_ok=True)
+            logger.info(f"Temp file cleaned up: {tmp_path}")
 
 
 if __name__ == "__main__":

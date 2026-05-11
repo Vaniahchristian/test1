@@ -10,10 +10,13 @@ CSV encoding: env **CSV_ENCODING** (default utf-8-sig).
 from __future__ import annotations
 
 import csv
+import logging
 import os
 import re
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 _OPTIONAL_FLOAT_FIELDS = frozenset(
     {
@@ -275,20 +278,26 @@ def load_sales_lines_from_xlsx(
     *,
     sheet_name: str | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
+    logger.info(f"Loading Excel file: {path}")
     path = path.expanduser().resolve()
     if not path.is_file():
+        logger.error(f"File not found: {path}")
         raise FileNotFoundError(path)
 
     try:
         from openpyxl import load_workbook  # type: ignore[import-untyped]
     except ImportError as e:
+        logger.error("openpyxl not installed")
         raise RuntimeError("Install openpyxl: pip install openpyxl") from e
 
+    logger.info(f"Opening workbook: {path}")
     wb = load_workbook(path, read_only=True, data_only=True)
     sn = sheet_name or os.environ.get("EXCEL_SHEET", "").strip() or None
+    logger.info(f"Available sheets: {wb.sheetnames}, selected: {sn or wb.sheetnames[0]}")
     if sn:
         if sn not in wb.sheetnames:
             wb.close()
+            logger.error(f"Sheet {sn!r} not found in {wb.sheetnames}")
             raise ValueError(f"Sheet {sn!r} not in workbook; available: {wb.sheetnames}")
         ws = wb[sn]
     else:
@@ -299,13 +308,17 @@ def load_sales_lines_from_xlsx(
         header_row = next(rows_iter)
     except StopIteration:
         wb.close()
+        logger.error("Excel file is empty (no rows)")
         return [], None
 
     headers = list(header_row)
+    logger.info(f"Headers found: {headers[:15]}...")
     col_to_field = _map_headers(headers)
+    logger.info(f"Mapped columns: {col_to_field}")
     if "item_code" not in col_to_field.values():
         wb.close()
         preview = [str(h) for h in headers[:30]]
+        logger.error(f"Could not map item_code column. Headers: {preview}")
         raise ValueError(
             "Excel import could not find an item / SKU column. "
             "Name a column ITEM NO, item code, or 产品货号. "
@@ -314,17 +327,21 @@ def load_sales_lines_from_xlsx(
 
     lines: list[dict[str, Any]] = []
     footer: dict[str, Any] | None = None
+    row_count = 0
 
     for row in rows_iter:
         vals = list(row)
+        row_count += 1
         if not vals or all(v is None or str(v).strip() == "" for v in vals):
             continue
         if _is_total_row(vals[0]):
             footer = _parse_footer_numbers(vals)
+            logger.info(f"Footer/TOTAL row found: {footer}")
             continue
         item = _row_to_line(vals, col_to_field, source="excel")
         if item:
             lines.append(item)
 
     wb.close()
+    logger.info(f"Excel parsing complete - rows scanned: {row_count}, lines parsed: {len(lines)}, footer: {footer is not None}")
     return lines, footer
