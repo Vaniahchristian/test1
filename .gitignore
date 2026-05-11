@@ -1,0 +1,29 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# build / Next
+.next
+out
+build
+dist
+
+# env (never commit secrets)
+.env
+.env.local
+.env.*.local
+
+# debug
+npm-debug.log*
+.DS_Store
+*.pem
+
+# typescript
+next-env.d.ts
+
+# Python
+.venv
+venv
+__pycache__/
+*.py[cod]
