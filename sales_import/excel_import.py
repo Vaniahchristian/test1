@@ -50,9 +50,12 @@ _HEADER_RULES: list[tuple[str, tuple[str, ...]]] = [
     ("dim_w_cm", ("外箱宽", "width", "w(cm)", "w (cm)", "dim w")),
     ("dim_h_cm", ("外箱高", "height", "h(cm)", "h (cm)", "dim h")),
     ("unit_cbm", ("unit cbm", "cbm/ctn", "单箱体积")),
-    ("total_cbm", ("ttl cbm", "total cbm", "line cbm")),
+    ("total_cbm", ("ttl cbm", "total cbm", "line cbm", "t.t.cbm", "t.t. cbm", "line vol")),
     ("unit_weight_kg", ("g.w", "gw.", "unit kg", "单箱重量", "毛重")),
-    ("total_weight_kg", ("ttl kgs", "ttl kg", "total kgs", "total kg", "总重量")),
+    (
+        "total_weight_kg",
+        ("ttl kgs", "ttl kg", "total kgs", "total kg", "总重量", "t.t.kgs", "t.t.kg", "t.t kg"),
+    ),
     ("barcode", ("条形", "barcode", "ean")),
     ("warehouse", ("w.h", "warehouse", "仓库", "wh")),
     ("unit", ("unit", "单位")),
@@ -216,14 +219,13 @@ def _row_to_line(
 
 
 def _find_csv_header_row_index(rows: list[list[str]]) -> int:
+    """Locate the header row; column positions differ across exports (e.g. extra PHOTO cols)."""
     for i, r in enumerate(rows):
         if len(r) < 10:
             continue
-        c3 = r[3] if len(r) > 3 else ""
-        c6 = r[6] if len(r) > 6 else ""
-        h3 = _norm_header(c3)
-        h6 = _norm_header(c6)
-        if ("item" in h3 or "产品货号" in (c3 or "")) and ("ctn" in h6 or "总箱" in (c6 or "")):
+        mapped = _map_headers(r)
+        fields = set(mapped.values())
+        if "item_code" in fields and "total_cartons" in fields:
             return i
     raise ValueError(
         "Could not find a packing-list header row (expect ITEM NO + CTN columns). "
