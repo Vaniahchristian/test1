@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from sales_import.pipeline import _ensure_dotenv, run_import
@@ -31,6 +32,15 @@ app = FastAPI(
     version="1.0.0",
     description="Upload PDF (Reducto), CSV, or Excel; inserts documents, document_items, document_totals when dry_run=false.",
 )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 _bearer = HTTPBearer(auto_error=False)
 
 
