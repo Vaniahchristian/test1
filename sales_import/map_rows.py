@@ -81,6 +81,19 @@ def _optional_int(v: Any) -> int | None:
         return None
 
 
+def _merge_validation_flags(raw: dict[str, Any]) -> list[Any]:
+    flags: list[Any] = []
+    v = raw.get("validation_flags")
+    if isinstance(v, list):
+        flags.extend(v)
+    n = raw.get("_normalize_flags")
+    if isinstance(n, list):
+        for x in n:
+            if x not in flags:
+                flags.append(x)
+    return flags
+
+
 def _pdf_row_label_for_source(raw: dict[str, Any]) -> str | None:
     """NO. / 编号 from the PDF (may repeat each page); stored in source_item_no."""
     for key in ("line_no", "no", "seq", "row_no"):
@@ -131,7 +144,7 @@ def extraction_row_to_document_item(
         "material": (raw.get("material") or "").strip() or None,
         "source_page": _optional_int(raw.get("source_page")),
         "extraction_confidence": _optional_int(raw.get("extraction_confidence")) or 0,
-        "validation_flags": raw.get("validation_flags") if isinstance(raw.get("validation_flags"), list) else [],
+        "validation_flags": _merge_validation_flags(raw),
         "model_source": "reducto",
         "section": "shipped",
         "source_cells": raw.get("source_cells") if isinstance(raw.get("source_cells"), dict) else {},

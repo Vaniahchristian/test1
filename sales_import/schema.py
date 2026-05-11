@@ -1,16 +1,27 @@
 """JSON Schema + prompts for Reducto Extract (sales packing list / invoice grid)."""
 
-SYSTEM_PROMPT = """You are extracting rows from a bilingual (English + Chinese) sales or packing list PDF.
-The main grid has columns such as: NO., DEL NO., CUS NO., ITEM NO., PHOTO, description, cartons, qty per carton,
-total qty, unit price (RMB), line amount (RMB), L/W/H cm, CBM, gross weight, TTL CBM, TTL KGS, barcode/code, remarks,
-warehouse, unit, Chinese product name, Chinese material.
-Return one line_items entry per product row on all pages; skip header rows and summary lines that are not products.
-Numbers must be numeric (not strings). Omit a field if absent — do not guess.
+SYSTEM_PROMPT = """You are extracting rows from a bilingual (English + Chinese) Yiwu-style delivery note / packing list PDF.
 
-Also locate the document-level summary/footer (often the last row(s) of the table or a TOTAL/合计 line) that states
-grand totals for the whole shipment: total cartons, total quantity (T.QTY), total TTL CBM, total TTL KGS, and total
-amount RMB. Put those in footer_totals. These must match the sum of line AMOUNT, TTL CBM, TTL KGS, T.QTY, and CTN
-columns across all line items — extract the printed footer values exactly as shown, not recomputed."""
+MAIN TABLE (all pages): columns include NO., DEL NO., CUS NO. (sometimes green-highlighted), ITEM NO., PHOTO, DES.,
+CTN, QTY, T.QTY, U/P, AMOUNT, L/W/H (cm), CBM (per carton), G.W. (per carton kg), TTL CBM (line total, often orange),
+TTL KGS (line total, often orange), CODE, REK, W.H., UNIT, NAME/品名, MATERIAL/材质.
+
+Line items (line_items):
+- One entry per real product row. Do NOT include the final TOTAL/合计 summary row as a line item.
+- Merged / repeated cells: DEL NO. and CUS NO. may be merged vertically. For every product row, repeat the DEL NO.
+  that applies to that block until the PDF shows a new one. If CUS NO. appears only on the first row of a group
+  (green highlight), copy that same customer_item_ref to each following product row in that group until a new CUS NO.
+  appears.
+- Orange styling on TTL CBM / TTL KGS does not change field names — still map to total_cbm and total_weight_kg per row.
+- Numbers must be JSON numbers, not strings. Omit fields you truly cannot read — do not guess.
+
+FOOTER TOTALS (footer_totals) — critical:
+- The document often has a **TOTAL** (or 合计) **row at the bottom of the main table** (typically on the last page),
+  summing CTN, T.QTY, AMOUNT, TTL CBM, TTL KGS for the **entire shipment**. Put those printed values in footer_totals.
+- Do **NOT** use the short **red header** snippets (e.g. 三仓/刀叉勺/东阳/秒账: 件数/m³) as footer_totals — those are
+  partial/warehouse summaries, not the table grand total.
+- Extract footer_totals **exactly as printed** in that TOTAL row; do not recompute from line items."""
+
 
 # Top-level schema must include `line_items` — mapper expects this key.
 SALES_EXTRACT_SCHEMA: dict = {
@@ -19,8 +30,8 @@ SALES_EXTRACT_SCHEMA: dict = {
         "line_items": {
             "type": "array",
             "description": (
-                "All product line rows from the delivery/packing table across every page, "
-                "in document order."
+                "All product line rows from the main delivery table on every page, top to bottom. "
+                "Exclude header-only rows and the final TOTAL/合计 aggregate row."
             ),
             "items": {
                 "type": "object",
@@ -35,11 +46,17 @@ SALES_EXTRACT_SCHEMA: dict = {
                     },
                     "delivery_no": {
                         "type": "string",
-                        "description": "DEL NO. / 送货单号",
+                        "description": (
+                            "DEL NO. / 送货单号. If the cell is vertically merged across several rows, "
+                            "use the same value for each product row in that block."
+                        ),
                     },
                     "customer_item_ref": {
                         "type": "string",
-                        "description": "CUS NO. / 客户货号",
+                        "description": (
+                            "CUS NO. / 客户货号 (often green). If only the first row of a group shows CUS NO., "
+                            "copy it to every following row in that group until a new CUS NO. appears."
+                        ),
                     },
                     "item_code": {
                         "type": "string",
@@ -59,11 +76,13 @@ SALES_EXTRACT_SCHEMA: dict = {
                     },
                     "qty_per_carton": {
                         "type": "number",
-                        "description": "QTY / 每箱数量",
+                        "description": "QTY / 每箱数量 — pieces per carton; with CTN and T.QTY must satisfy T.QTY = CTN × QTY",
                     },
                     "total_quantity": {
                         "type": "number",
-                        "description": "T.QTY / 总数量",
+                        "description": (
+                            "T.QTY / 总数量 — line total units; equals CTN × QTY when all quantity columns are readable"
+                        ),
                     },
                     "unit_price_rmb": {
                         "type": "number",
@@ -102,8 +121,9 @@ SALES_EXTRACT_SCHEMA: dict = {
         "footer_totals": {
             "type": "object",
             "description": (
-                "Grand totals printed in the PDF for the entire document (footer row, TOTAL, or 合计): "
-                "must be document-level sums, not a single line item."
+                "The **bottom TOTAL / 合计 row of the main product table** (usually on the last page): "
+                "grand totals for CTN, T.QTY, AMOUNT (RMB), TTL CBM, TTL KGS for the full document. "
+                "Not red header warehouse snippets; not a single line item."
             ),
             "properties": {
                 "total_cartons": {
@@ -151,6 +171,9 @@ def parsing_options() -> dict:
 
 
 def extract_settings() -> dict:
+    import os
+
+    deep = os.environ.get("REDUCTO_DEEP_EXTRACT", "").strip().lower() in ("1", "true", "yes")
     return {
-        "deep_extract": False,
+        "deep_extract": deep,
     }

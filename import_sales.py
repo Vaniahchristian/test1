@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI entry: python import_sales.py path/to/sales.pdf [--dry-run]"""
+"""CLI: python import_sales.py file.pdf|file.xlsx|file.csv [--dry-run] [--sheet NAME]"""
 
 from sales_import.pipeline import main_cli
 
