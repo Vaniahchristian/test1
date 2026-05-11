@@ -104,5 +104,6 @@ if __name__ == "__main__":
 
     _ensure_dotenv()
     host = os.environ.get("API_HOST", "0.0.0.0")
-    port = int(os.environ.get("API_PORT", "8000"))
+    # Railway / Render set PORT; local dev can use API_PORT.
+    port = int(os.environ.get("PORT", os.environ.get("API_PORT", "8000")))
     uvicorn.run("api:app", host=host, port=port, reload=False)
