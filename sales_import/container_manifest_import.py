@@ -257,6 +257,15 @@ def _merge_subtotal_metrics(
     return out
 
 
+def _row_has_line_qty_pcs(row: list[str], idx: dict[str, int]) -> bool:
+    """True when T.QTY holds a line quantity like ``156pcs`` (continuation rows must not be yellow subtotals)."""
+    j = idx.get("t_qty")
+    if j is None or j >= len(row):
+        return False
+    t = str(row[j] or "").strip()
+    return bool(t and _RE_PCS.search(t))
+
+
 def _process_manifest_data_rows(
     data_rows: list[list[str]],
     idx: dict[str, int],
@@ -318,7 +327,13 @@ def _process_manifest_data_rows(
             _trace("footer_total_row", csv_line=csv_line)
             continue
 
-        is_yellow = is_likely_yellow_subtotal_row(joined) or _is_aggregate_row(r, idx)
+        is_yellow = (
+            not _row_has_line_qty_pcs(r, idx)
+            and (
+                is_likely_yellow_subtotal_row(joined)
+                or _is_aggregate_row(r, idx)
+            )
+        )
         if is_yellow:
             mj = extract_yellow_subtotal_metrics(joined)
             mi = _subtotal_metrics_from_idx(r, idx)
@@ -389,6 +404,9 @@ def _is_aggregate_row(row: list[str], idx: dict[str, int]) -> bool:
     shop = g("shop")
     item_no = g("item_no")
     if marks or shop or item_no:
+        return False
+    t_qty = g("t_qty")
+    if t_qty and _RE_PCS.search(t_qty):
         return False
     t_ctn = g("t_ctn")
     if not t_ctn or not _RE_CTNS.search(t_ctn):
