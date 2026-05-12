@@ -1,0 +1,1624 @@
+[
+  {
+    "event": "section_banner",
+    "csv_line": 2,
+    "section": "shipped",
+    "banner_label": "NEW ORDER"
+  },
+  {
+    "event": "item",
+    "csv_line": 3,
+    "item_index": 0,
+    "delivery_no": "MS-301-1 SANCARGO",
+    "total_cartons": 7.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 4,
+    "item_index": 1,
+    "delivery_no": "MS-301-2 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 5,
+    "item_index": 2,
+    "delivery_no": "MS-301-3 SANCARGO",
+    "total_cartons": null,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 6,
+    "item_index": 3,
+    "delivery_no": "MS-301-4 SANCARGO",
+    "total_cartons": null,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 7,
+    "item_index": 4,
+    "delivery_no": "MS-301-5 SANCARGO",
+    "total_cartons": null,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 8,
+    "item_index": 5,
+    "delivery_no": "MS-301-6 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 9,
+    "item_index": 6,
+    "delivery_no": "MS-301-7 SANCARGO",
+    "total_cartons": 4.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 10,
+    "item_index": 7,
+    "delivery_no": "MS-301-8 SANCARGO",
+    "total_cartons": 5.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 11,
+    "item_index": 8,
+    "delivery_no": "MS-301-9 SANCARGO",
+    "total_cartons": 5.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 12,
+    "item_index": 9,
+    "delivery_no": "MS-301-10 SANCARGO",
+    "total_cartons": 10.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 13,
+    "item_index": 10,
+    "delivery_no": "MS-301-11 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 14,
+    "item_index": 11,
+    "delivery_no": "MS-301-12 SANCARGO",
+    "total_cartons": 9.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 15,
+    "item_index": 12,
+    "delivery_no": "MS-301-13 SANCARGO",
+    "total_cartons": 0.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 16,
+    "item_index": 13,
+    "delivery_no": "MS-301-14 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 17,
+    "item_index": 14,
+    "delivery_no": "MS-301-15 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 18,
+    "item_index": 15,
+    "delivery_no": "MS-301-16 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 19,
+    "item_index": 16,
+    "delivery_no": "MS-301-17 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 20,
+    "item_index": 17,
+    "delivery_no": "MS-301-18 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 21,
+    "item_index": 18,
+    "delivery_no": "MS-301-19 SANCARGO",
+    "total_cartons": 3.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 22,
+    "item_index": 19,
+    "delivery_no": "MS-301-20 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 23,
+    "item_index": 20,
+    "delivery_no": "MS-301-21 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 24,
+    "item_index": 21,
+    "delivery_no": "MS-301-22 SANCARGO",
+    "total_cartons": 3.0,
+    "section": "shipped"
+  },
+  {
+    "event": "header_repeat",
+    "csv_line": 25
+  },
+  {
+    "event": "item",
+    "csv_line": 26,
+    "item_index": 22,
+    "delivery_no": "MS-301-23 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 27,
+    "item_index": 23,
+    "delivery_no": "MS-301-24 SANCARGO",
+    "total_cartons": null,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 28,
+    "item_index": 24,
+    "delivery_no": "MS-301-24 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 29,
+    "item_index": 25,
+    "delivery_no": "MS-301-24 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 30,
+    "item_index": 26,
+    "delivery_no": "MS-301-24 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 31,
+    "item_index": 27,
+    "delivery_no": "MS-301-24 SANCARGO",
+    "total_cartons": 17.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 32,
+    "item_index": 28,
+    "delivery_no": "MS-301-24 SANCARGO",
+    "total_cartons": 8.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 33,
+    "item_index": 29,
+    "delivery_no": "MS-301-24 SANCARGO",
+    "total_cartons": 6.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 34,
+    "item_index": 30,
+    "delivery_no": "MS-302-1 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 35,
+    "item_index": 31,
+    "delivery_no": "MS-302-2 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 36,
+    "item_index": 32,
+    "delivery_no": "MS-302-3 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 37,
+    "item_index": 33,
+    "delivery_no": "MS-302-4 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 38,
+    "item_index": 34,
+    "delivery_no": "MS-302-5 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 39,
+    "item_index": 35,
+    "delivery_no": "MS-302-6 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 40,
+    "item_index": 36,
+    "delivery_no": "MS-302-7 SANCARGO",
+    "total_cartons": 27.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 41,
+    "item_index": 37,
+    "delivery_no": "MS-302-8 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 42,
+    "item_index": 38,
+    "delivery_no": "MS-302-10 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 43,
+    "item_index": 39,
+    "delivery_no": "MS-302-11 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 44,
+    "item_index": 40,
+    "delivery_no": "MS-302-12 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 45,
+    "item_index": 41,
+    "delivery_no": "MS-302-13 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 46,
+    "item_index": 42,
+    "delivery_no": "MS-302-14 SANCARGO",
+    "total_cartons": 15.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 47,
+    "item_index": 43,
+    "delivery_no": "MS-302-15 SANCARGO",
+    "total_cartons": 3.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 48,
+    "item_index": 44,
+    "delivery_no": "MS-302-16 SANCARGO",
+    "total_cartons": 10.0,
+    "section": "shipped"
+  },
+  {
+    "event": "header_repeat",
+    "csv_line": 49
+  },
+  {
+    "event": "item",
+    "csv_line": 50,
+    "item_index": 45,
+    "delivery_no": "MS-302-17 SANCARGO",
+    "total_cartons": 5.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 51,
+    "item_index": 46,
+    "delivery_no": "MS-302-19 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 52,
+    "item_index": 47,
+    "delivery_no": "MS-302-20 SANCARGO",
+    "total_cartons": 10.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 53,
+    "item_index": 48,
+    "delivery_no": "MS-302-21 SANCARGO",
+    "total_cartons": 4.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 54,
+    "item_index": 49,
+    "delivery_no": "MS-302-22 SANCARGO",
+    "total_cartons": 13.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 55,
+    "item_index": 50,
+    "delivery_no": "MS-302-23 SANCARGO",
+    "total_cartons": 0.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 56,
+    "item_index": 51,
+    "delivery_no": "MS-302-24 SANCARGO",
+    "total_cartons": 7.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 57,
+    "item_index": 52,
+    "delivery_no": "MS-302-25 SANCARGO",
+    "total_cartons": 3.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 58,
+    "item_index": 53,
+    "delivery_no": "MS-302-26 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 59,
+    "item_index": 54,
+    "delivery_no": "MS-302-27 SANCARGO",
+    "total_cartons": 0.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 60,
+    "item_index": 55,
+    "delivery_no": "MS-302-28 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 61,
+    "item_index": 56,
+    "delivery_no": "MS-302-29 SANCARGO",
+    "total_cartons": 5.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 62,
+    "item_index": 57,
+    "delivery_no": "MS-302-30 SANCARGO",
+    "total_cartons": 20.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 63,
+    "item_index": 58,
+    "delivery_no": "MS-302-30 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 64,
+    "item_index": 59,
+    "delivery_no": "MS-302-30 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 65,
+    "item_index": 60,
+    "delivery_no": "MS-302-30 SANCARGO",
+    "total_cartons": 6.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 66,
+    "item_index": 61,
+    "delivery_no": "MS-302-30 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 67,
+    "item_index": 62,
+    "delivery_no": "MS-303-1 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 68,
+    "item_index": 63,
+    "delivery_no": "MS-303-2 SANCARGO",
+    "total_cartons": 0.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 69,
+    "item_index": 64,
+    "delivery_no": "MS-303-3 SANCARGO",
+    "total_cartons": 20.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 70,
+    "item_index": 65,
+    "delivery_no": "MS-303-3 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 71,
+    "item_index": 66,
+    "delivery_no": "MS-303-4 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 72,
+    "item_index": 67,
+    "delivery_no": "MS-303-5 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "skip_blank",
+    "csv_line": 73
+  },
+  {
+    "event": "header_repeat",
+    "csv_line": 74
+  },
+  {
+    "event": "item",
+    "csv_line": 75,
+    "item_index": 68,
+    "delivery_no": "MS-303-6 SANCARGO",
+    "total_cartons": 10.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 76,
+    "item_index": 69,
+    "delivery_no": "MS-303-7 SANCARGO",
+    "total_cartons": 0.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 77,
+    "item_index": 70,
+    "delivery_no": "MS-303-8 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 78,
+    "item_index": 71,
+    "delivery_no": "MS-303-9 SANCARGO",
+    "total_cartons": 5.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 79,
+    "item_index": 72,
+    "delivery_no": "MS-303-10 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 80,
+    "item_index": 73,
+    "delivery_no": "MS-303-11 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 81,
+    "item_index": 74,
+    "delivery_no": "MS-303-12 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 82,
+    "item_index": 75,
+    "delivery_no": "MS-303-13 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 83,
+    "item_index": 76,
+    "delivery_no": "MS-303-14 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 84,
+    "item_index": 77,
+    "delivery_no": "MS-303-15 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 85,
+    "item_index": 78,
+    "delivery_no": "MS-303-16 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 86,
+    "item_index": 79,
+    "delivery_no": "MS-303-17 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 87,
+    "item_index": 80,
+    "delivery_no": "MS-303-18 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 88,
+    "item_index": 81,
+    "delivery_no": "MS-303-19 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 89,
+    "item_index": 82,
+    "delivery_no": "MS-304-1 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 90,
+    "item_index": 83,
+    "delivery_no": "MS-304-2 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 91,
+    "item_index": 84,
+    "delivery_no": "MS-305-1 SANCARGO",
+    "total_cartons": 20.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 92,
+    "item_index": 85,
+    "delivery_no": "MS-305-2 SANCARGO",
+    "total_cartons": 8.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 93,
+    "item_index": 86,
+    "delivery_no": "MS-306-1 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 94,
+    "item_index": 87,
+    "delivery_no": "MS-306-2 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 95,
+    "item_index": 88,
+    "delivery_no": "MS-307-1 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 96,
+    "item_index": 89,
+    "delivery_no": "MS-307-2 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 97,
+    "item_index": 90,
+    "delivery_no": "MS-307-3 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "header_repeat",
+    "csv_line": 98
+  },
+  {
+    "event": "item",
+    "csv_line": 99,
+    "item_index": 91,
+    "delivery_no": "MS-307-4 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 100,
+    "item_index": 92,
+    "delivery_no": "MS-307-5 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 101,
+    "item_index": 93,
+    "delivery_no": "MS-307-5 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 102,
+    "item_index": 94,
+    "delivery_no": "MS-308-1 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "yellow_subtotal",
+    "csv_line": 103,
+    "section": "shipped",
+    "metrics": {
+      "total_cartons": 1.0,
+      "total_cbm": 0.238,
+      "total_weight_kg": 64.0,
+      "total_amount_rmb": 3432.0
+    }
+  },
+  {
+    "event": "item",
+    "csv_line": 104,
+    "item_index": 95,
+    "delivery_no": "MS-308-2 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 105,
+    "item_index": 96,
+    "delivery_no": "MS-308-3 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 106,
+    "item_index": 97,
+    "delivery_no": "MS-308-4 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 107,
+    "item_index": 98,
+    "delivery_no": "MS-308-5 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 108,
+    "item_index": 99,
+    "delivery_no": "MS-308-6 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 109,
+    "item_index": 100,
+    "delivery_no": "MS-308-7 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 110,
+    "item_index": 101,
+    "delivery_no": "MS-308-8 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 111,
+    "item_index": 102,
+    "delivery_no": "MS-308-9 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 112,
+    "item_index": 103,
+    "delivery_no": "MS-308-10 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 113,
+    "item_index": 104,
+    "delivery_no": "MS-308-11 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 114,
+    "item_index": 105,
+    "delivery_no": "MS-308-12 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 115,
+    "item_index": 106,
+    "delivery_no": "MS-309-1 SANCARGO",
+    "total_cartons": 0.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 116,
+    "item_index": 107,
+    "delivery_no": "MS-309-2 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 117,
+    "item_index": 108,
+    "delivery_no": "MS-309-3 SANCARGO",
+    "total_cartons": 0.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 118,
+    "item_index": 109,
+    "delivery_no": "MS-309-4 SANCARGO",
+    "total_cartons": 0.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 119,
+    "item_index": 110,
+    "delivery_no": "MS-310-1 SANCARGO",
+    "total_cartons": 0.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 120,
+    "item_index": 111,
+    "delivery_no": "MS-311-1 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 121,
+    "item_index": 112,
+    "delivery_no": "MS-311-2 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "header_repeat",
+    "csv_line": 122
+  },
+  {
+    "event": "item",
+    "csv_line": 123,
+    "item_index": 113,
+    "delivery_no": "MS-311-3 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 124,
+    "item_index": 114,
+    "delivery_no": "MS-311-3 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 125,
+    "item_index": 115,
+    "delivery_no": "MS-311-4 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 126,
+    "item_index": 116,
+    "delivery_no": "MS-311-5 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 127,
+    "item_index": 117,
+    "delivery_no": "MS-311-6 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 128,
+    "item_index": 118,
+    "delivery_no": "MS-311-7 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 129,
+    "item_index": 119,
+    "delivery_no": "MS-311-8 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 130,
+    "item_index": 120,
+    "delivery_no": "MS-311-9 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 131,
+    "item_index": 121,
+    "delivery_no": "MS-311-10 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 132,
+    "item_index": 122,
+    "delivery_no": "MS-311-11 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 133,
+    "item_index": 123,
+    "delivery_no": "MS-311-12 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 134,
+    "item_index": 124,
+    "delivery_no": "MS-311-13 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 135,
+    "item_index": 125,
+    "delivery_no": "MS-311-14 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 136,
+    "item_index": 126,
+    "delivery_no": "MS-311-15 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 137,
+    "item_index": 127,
+    "delivery_no": "MS-311-16 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 138,
+    "item_index": 128,
+    "delivery_no": "MS-311-17 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 139,
+    "item_index": 129,
+    "delivery_no": "MS-311-18 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 140,
+    "item_index": 130,
+    "delivery_no": "MS-311-18 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 141,
+    "item_index": 131,
+    "delivery_no": "MS-311-19 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 142,
+    "item_index": 132,
+    "delivery_no": "MS-312-1 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 143,
+    "item_index": 133,
+    "delivery_no": "MS-312-2 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 144,
+    "item_index": 134,
+    "delivery_no": "MS-312-3 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 145,
+    "item_index": 135,
+    "delivery_no": "MS-312-4 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "header_repeat",
+    "csv_line": 146
+  },
+  {
+    "event": "item",
+    "csv_line": 147,
+    "item_index": 136,
+    "delivery_no": "MS-313-1 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 148,
+    "item_index": 137,
+    "delivery_no": "MS-313-2 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 149,
+    "item_index": 138,
+    "delivery_no": "MS-313-3 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 150,
+    "item_index": 139,
+    "delivery_no": "MS-314-1 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 151,
+    "item_index": 140,
+    "delivery_no": "MS-314-2 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 152,
+    "item_index": 141,
+    "delivery_no": "MS-314-3 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 153,
+    "item_index": 142,
+    "delivery_no": "MS-314-4 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 154,
+    "item_index": 143,
+    "delivery_no": "MS-314-5 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 155,
+    "item_index": 144,
+    "delivery_no": "MS-314-6 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 156,
+    "item_index": 145,
+    "delivery_no": "MS-314-7 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 157,
+    "item_index": 146,
+    "delivery_no": "MOSES",
+    "total_cartons": 4.0,
+    "section": "shipped"
+  },
+  {
+    "event": "item",
+    "csv_line": 158,
+    "item_index": 147,
+    "delivery_no": "MOSES",
+    "total_cartons": null,
+    "section": "shipped"
+  },
+  {
+    "event": "yellow_subtotal",
+    "csv_line": 159,
+    "section": "shipped",
+    "metrics": {
+      "total_cartons": 400.0,
+      "total_cbm": 85.144,
+      "total_weight_kg": 12781.7,
+      "total_amount_rmb": 594245.0
+    }
+  },
+  {
+    "event": "section_banner",
+    "csv_line": 160,
+    "section": "repacked",
+    "banner_label": "37-T-1 18 CTN GOODS STUFFED INTO THIS CONTAINER(REPACKED GOODS)"
+  },
+  {
+    "event": "item",
+    "csv_line": 161,
+    "item_index": 148,
+    "delivery_no": "37-T-120-10 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "repacked"
+  },
+  {
+    "event": "item",
+    "csv_line": 162,
+    "item_index": 149,
+    "delivery_no": "37-T-120-3 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "repacked"
+  },
+  {
+    "event": "item",
+    "csv_line": 163,
+    "item_index": 150,
+    "delivery_no": "37-T-105-5 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "repacked"
+  },
+  {
+    "event": "item",
+    "csv_line": 164,
+    "item_index": 151,
+    "delivery_no": "37-T-120-6 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "repacked"
+  },
+  {
+    "event": "item",
+    "csv_line": 165,
+    "item_index": 152,
+    "delivery_no": "37-T-120-7 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "repacked"
+  },
+  {
+    "event": "item",
+    "csv_line": 166,
+    "item_index": 153,
+    "delivery_no": "37-T-120-5 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "repacked"
+  },
+  {
+    "event": "item",
+    "csv_line": 167,
+    "item_index": 154,
+    "delivery_no": "37-T-120-9 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "repacked"
+  },
+  {
+    "event": "item",
+    "csv_line": 168,
+    "item_index": 155,
+    "delivery_no": "37-T-108-2 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "repacked"
+  },
+  {
+    "event": "item",
+    "csv_line": 169,
+    "item_index": 156,
+    "delivery_no": "37-T-108-1 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "repacked"
+  },
+  {
+    "event": "item",
+    "csv_line": 170,
+    "item_index": 157,
+    "delivery_no": "37-T-108-3 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "repacked"
+  },
+  {
+    "event": "header_repeat",
+    "csv_line": 171
+  },
+  {
+    "event": "item",
+    "csv_line": 172,
+    "item_index": 158,
+    "delivery_no": "37-T-105-2 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "repacked"
+  },
+  {
+    "event": "item",
+    "csv_line": 173,
+    "item_index": 159,
+    "delivery_no": "37-T-108-4 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "repacked"
+  },
+  {
+    "event": "item",
+    "csv_line": 174,
+    "item_index": 160,
+    "delivery_no": "37-T-120-8 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "repacked"
+  },
+  {
+    "event": "yellow_subtotal",
+    "csv_line": 175,
+    "section": "repacked",
+    "metrics": {
+      "total_cartons": 18.0,
+      "total_cbm": 2.065,
+      "total_weight_kg": 244.9,
+      "total_amount_rmb": 11775.0
+    }
+  },
+  {
+    "event": "section_banner",
+    "csv_line": 176,
+    "section": "left_in_warehouse",
+    "banner_label": "GOODS LEFT IN SANCARGO"
+  },
+  {
+    "event": "item",
+    "csv_line": 177,
+    "item_index": 161,
+    "delivery_no": "MS-301-24 SANCARGO",
+    "total_cartons": 3.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 178,
+    "item_index": 162,
+    "delivery_no": "MS-301-24 SANCARGO",
+    "total_cartons": 12.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 179,
+    "item_index": 163,
+    "delivery_no": "MS-301-24 SANCARGO",
+    "total_cartons": 4.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 180,
+    "item_index": 164,
+    "delivery_no": "MS-301-12 SANCARGO",
+    "total_cartons": 11.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 181,
+    "item_index": 165,
+    "delivery_no": "MS-301-13 SANCARGO",
+    "total_cartons": 5.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 182,
+    "item_index": 166,
+    "delivery_no": "MS-301-20 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 183,
+    "item_index": 167,
+    "delivery_no": "MS-303-4/5 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 184,
+    "item_index": 168,
+    "delivery_no": "MS-303-15 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 185,
+    "item_index": 169,
+    "delivery_no": "MS-303-16 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 186,
+    "item_index": 170,
+    "delivery_no": "MS-303-7 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 187,
+    "item_index": 171,
+    "delivery_no": "MS-305-2 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 188,
+    "item_index": 172,
+    "delivery_no": "MS-302-18 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 189,
+    "item_index": 173,
+    "delivery_no": "MS-302-19 SANCARGO",
+    "total_cartons": 3.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 190,
+    "item_index": 174,
+    "delivery_no": "MS-302-15 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 191,
+    "item_index": 175,
+    "delivery_no": "MS-302-28 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 192,
+    "item_index": 176,
+    "delivery_no": "MS-302-3 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 193,
+    "item_index": 177,
+    "delivery_no": "MS-302-23 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 194,
+    "item_index": 178,
+    "delivery_no": "MS-302-27 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 195,
+    "item_index": 179,
+    "delivery_no": "MS-302-22 SANCARGO",
+    "total_cartons": 2.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "header_repeat",
+    "csv_line": 196
+  },
+  {
+    "event": "item",
+    "csv_line": 197,
+    "item_index": 180,
+    "delivery_no": "MS-302-21 SANCARGO",
+    "total_cartons": 1.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "item",
+    "csv_line": 198,
+    "item_index": 181,
+    "delivery_no": "MS-302-9 SANCARGO",
+    "total_cartons": 5.0,
+    "section": "left_in_warehouse"
+  },
+  {
+    "event": "yellow_subtotal",
+    "csv_line": 199,
+    "section": "left_in_warehouse",
+    "metrics": {
+      "total_cartons": 63.0,
+      "total_cbm": 11.7575,
+      "total_weight_kg": 1731.5,
+      "total_amount_rmb": 30995.0
+    }
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 200
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 201
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 202
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 203
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 204
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 205
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 206
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 207
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 208
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 209
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 210
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 211
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 212
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 213
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 214
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 215
+  },
+  {
+    "event": "footer_total_row",
+    "csv_line": 216
+  }
+]

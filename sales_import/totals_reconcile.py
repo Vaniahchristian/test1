@@ -15,15 +15,6 @@ TOTAL_KEYS = (
     "total_amount_rmb",
 )
 
-# Ignore per-line outliers when summing (mis-OCR / column bleed). Tune via env if needed.
-_MAX_PLAUSIBLE_PER_LINE: dict[str, float] = {
-    "total_cartons": float(os.environ.get("TOTALS_MAX_LINE_CARTONS", "20000")),
-    "total_quantity": float(os.environ.get("TOTALS_MAX_LINE_QTY", "200000")),
-    "total_cbm": float(os.environ.get("TOTALS_MAX_LINE_CBM", "100")),
-    "total_weight_kg": float(os.environ.get("TOTALS_MAX_LINE_KG", "50000")),
-    "total_amount_rmb": float(os.environ.get("TOTALS_MAX_LINE_RMB", "1e7")),
-}
-
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -56,27 +47,20 @@ def _to_float(v: Any) -> float | None:
         return None
 
 
-def sum_item_rows(
-    item_rows: list[dict[str, Any]],
-) -> tuple[dict[str, float | None], dict[str, int]]:
-    """Sum numeric columns; skip per-cell values outside plausible ranges (OCR bleed)."""
+def sum_item_rows(item_rows: list[dict[str, Any]]) -> dict[str, float | None]:
+    """Sum numeric columns from stored line values (no caps or section filtering)."""
     out: dict[str, float | None] = {k: None for k in TOTAL_KEYS}
-    skipped: dict[str, int] = {k: 0 for k in TOTAL_KEYS}
     for key in TOTAL_KEYS:
-        cap = _MAX_PLAUSIBLE_PER_LINE.get(key, float("inf"))
         s = 0.0
         n = 0
         for row in item_rows:
             fv = _to_float(row.get(key))
             if fv is None:
                 continue
-            if fv < 0 or abs(fv) > cap:
-                skipped[key] += 1
-                continue
             s += fv
             n += 1
         out[key] = s if n else None
-    return out, skipped
+    return out
 
 
 def _tolerance_for(key: str) -> tuple[float, float]:
@@ -107,23 +91,17 @@ def reconcile_totals(
     *,
     pdf_footer: dict[str, Any] | None,
     computed: dict[str, float | None],
-    sanity_skipped: dict[str, int] | None = None,
 ) -> tuple[bool, dict[str, Any]]:
     """
     Compare PDF footer numbers to summed line items.
     If pdf_footer is missing or empty, totals_match is False.
     """
     diff: dict[str, Any] = {}
-    if sanity_skipped and any(v > 0 for v in sanity_skipped.values()):
-        diff["_sanity_skipped_line_cells"] = {k: v for k, v in sanity_skipped.items() if v > 0}
     if not pdf_footer:
-        base = {
+        return False, {
             "_note": "no_pdf_footer_totals_extracted",
             "computed": {k: v for k, v in computed.items() if v is not None},
         }
-        if diff:
-            base.update(diff)
-        return False, base
 
     match = True
     compared_any = False
@@ -143,13 +121,11 @@ def reconcile_totals(
             match = False
 
     if not compared_any:
-        out_diff: dict[str, Any] = {
+        return False, {
             "_note": "pdf_footer_had_no_numeric_totals",
             "footer_keys": list(pdf_footer.keys()),
             "computed": {k: v for k, v in computed.items() if v is not None},
         }
-        out_diff.update(diff)
-        return False, out_diff
 
     return match, diff if diff else {}
 
@@ -161,11 +137,10 @@ def upsert_document_totals_row(
     pdf_footer: dict[str, Any] | None,
     item_rows: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    computed, skipped = sum_item_rows(item_rows)
+    computed = sum_item_rows(item_rows)
     totals_match, totals_diff = reconcile_totals(
         pdf_footer=pdf_footer,
         computed=computed,
-        sanity_skipped=skipped,
     )
 
     row: dict[str, Any] = {
@@ -189,7 +164,6 @@ def upsert_document_totals_row(
         "totals_match": totals_match,
         "totals_diff": totals_diff,
         "computed": computed,
-        "sanity_skipped_cells": {k: v for k, v in skipped.items() if v > 0},
     }
 
 
@@ -204,8 +178,9 @@ def refresh_totals_for_document(sb: Client, document_id: str) -> dict[str, Any]:
     )
     if not doc.data:
         raise ValueError(f"document not found: {document_id}")
-    raw = (doc.data[0] or {}).get("raw_extraction") or {}
-    norm = (doc.data[0] or {}).get("normalized_payload") or {}
+    row0 = doc.data[0] or {}
+    raw = row0.get("raw_extraction") or {}
+    norm = row0.get("normalized_payload") or {}
     if isinstance(norm, str):
         norm = {}
     parts: list[dict[str, Any]] = []
@@ -229,7 +204,9 @@ def refresh_totals_for_document(sb: Client, document_id: str) -> dict[str, Any]:
         .execute()
     )
     rows = items.data or []
-    out = upsert_document_totals_row(sb, document_id=document_id, pdf_footer=footer, item_rows=rows)
+    out = upsert_document_totals_row(
+        sb, document_id=document_id, pdf_footer=footer, item_rows=rows
+    )
     sb.table("documents").update(
         {
             "validation_flags": {

@@ -42,6 +42,7 @@ _DOCUMENT_ITEM_KEYS = frozenset(
         "product_name_local",
         "material",
         "source_cells",
+        "marks",
     }
 )
 
@@ -96,7 +97,7 @@ def _merge_validation_flags(raw: dict[str, Any]) -> list[Any]:
 
 def _pdf_row_label_for_source(raw: dict[str, Any]) -> str | None:
     """NO. / 编号 from the PDF (may repeat each page); stored in source_item_no."""
-    for key in ("line_no", "no", "seq", "row_no"):
+    for key in ("manifest_item_no", "line_no", "no", "seq", "row_no"):
         v = raw.get(key)
         if v is None:
             continue
@@ -116,10 +117,29 @@ def extraction_row_to_document_item(
     line_no = db_line_no
     source_item_no = _pdf_row_label_for_source(raw)
 
+    ms = raw.get("model_source")
+    model_source = (
+        ms.strip()
+        if isinstance(ms, str) and ms.strip()
+        else ("reducto" if ms in (None, "") else str(ms))
+    )
+
+    sec_raw = raw.get("section")
+    if isinstance(sec_raw, str) and sec_raw.strip().lower() in (
+        "shipped",
+        "left_in_warehouse",
+        "repacked",
+    ):
+        section_val = sec_raw.strip().lower()
+    else:
+        section_val = "shipped"
+
     row: dict[str, Any] = {
         "document_id": document_id,
         "line_no": line_no,
         "item_code": (raw.get("item_code") or "").strip() or None,
+        "code": (raw.get("code") or "").strip() or None,
+        "marks": (raw.get("marks") or "").strip() or None,
         "description": (raw.get("description") or "").strip() or None,
         "delivery_no": (raw.get("delivery_no") or "").strip() or None,
         "customer_item_ref": (raw.get("customer_item_ref") or "").strip() or None,
@@ -139,14 +159,16 @@ def extraction_row_to_document_item(
         "barcode": (raw.get("barcode") or "").strip() or None,
         "remarks": (raw.get("remarks") or "").strip() or None,
         "warehouse": (raw.get("warehouse") or "").strip() or None,
+        "shop": (raw.get("shop") or "").strip() or None,
+        "packaging": (raw.get("packaging") or "").strip() or None,
         "unit": (raw.get("unit") or "").strip() or None,
         "product_name_local": (raw.get("product_name_local") or "").strip() or None,
         "material": (raw.get("material") or "").strip() or None,
         "source_page": _optional_int(raw.get("source_page")),
         "extraction_confidence": _optional_int(raw.get("extraction_confidence")) or 0,
         "validation_flags": _merge_validation_flags(raw),
-        "model_source": "reducto",
-        "section": "shipped",
+        "model_source": model_source,
+        "section": section_val,
         "source_cells": raw.get("source_cells") if isinstance(raw.get("source_cells"), dict) else {},
     }
     if source_item_no is not None:

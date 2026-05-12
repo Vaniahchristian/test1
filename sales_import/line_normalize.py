@@ -72,7 +72,10 @@ def _flags(row: dict[str, Any]) -> list[str]:
 
 def _clean_stripped_string_fields(row: dict[str, Any], fl: list[str]) -> None:
     """Strip table noise (pipes, control chars) from short text columns."""
-    for key in ("item_code", "material", "product_name_local", "description"):
+    keys = ("item_code", "material", "product_name_local", "description")
+    if "manifest_import" in fl:
+        keys = ("item_code", "material", "product_name_local")
+    for key in keys:
         v = row.get(key)
         if not isinstance(v, str):
             continue
@@ -352,6 +355,9 @@ def _forward_fill_warehouse(lines: list[dict[str, Any]]) -> None:
 def _normalize_one_line(row: dict[str, Any]) -> None:
     """Repair numeric consistency for packing-list math (in-place)."""
     fl = _flags(row)
+    if "manifest_import" in fl:
+        _clean_stripped_string_fields(row, fl)
+        return
     _clean_stripped_string_fields(row, fl)
 
     _infer_total_quantity_from_amount(row, fl)
