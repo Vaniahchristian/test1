@@ -66,7 +66,7 @@ _HEADER_RULES: list[tuple[str, tuple[str, ...]]] = [
     ("barcode", ("条形", "barcode", "ean")),
     ("warehouse", ("w.h", "warehouse", "仓库", "wh")),
     ("unit", ("unit", "单位")),
-    ("product_name_local", ("品名", "name local", "产品名")),
+    ("product_name_local", ("品名", "name local", "产品名", "name")),
     ("material", ("material", "材质")),
     ("remarks", ("rek", "remark", "备注")),
 ]
