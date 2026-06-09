@@ -289,6 +289,10 @@ def load_sales_lines_from_csv(
     lines: list[dict[str, Any]] = []
     footer: dict[str, Any] | None = None
     current_section: str | None = None
+    section_subtotals: list[dict[str, Any]] = []
+    _subtotal_fields = frozenset(
+        {"total_cartons", "total_quantity", "total_cbm", "total_weight_kg", "total_amount_rmb"}
+    )
     for r in rows[hi + 1 :]:
         if not r or all(v is None or str(v).strip() == "" for v in r):
             continue
@@ -302,6 +306,18 @@ def load_sales_lines_from_csv(
             continue
         item = _row_to_line(r, col_to_field, source="csv")
         if not item:
+            # Section subtotal rows have no item_code but carry CTN/CBM/KGS/amount data.
+            # Detect them: item_code col is empty AND at least total_cartons + total_cbm present.
+            if not (r[0] and str(r[0]).strip()):
+                sub: dict[str, Any] = {}
+                for j, field in col_to_field.items():
+                    if j >= len(r) or field not in _subtotal_fields:
+                        continue
+                    v = _cell_to_float(r[j])
+                    if v is not None and v >= 0:
+                        sub[field] = v
+                if sub.get("total_cartons") and sub.get("total_cbm"):
+                    section_subtotals.append(sub)
             continue
         # Skip non-product rows (financial notes, freight lines) that have no quantity data.
         if (
@@ -311,16 +327,19 @@ def load_sales_lines_from_csv(
         ):
             continue
         # Merge description from continuation columns when the mapped col was empty.
+        # col 2 → short product name stored in product_name_local
+        # col 3 → full description
         if desc_extra and not item.get("description"):
             parts = [
                 " ".join(str(r[j]).split())  # collapse internal whitespace/newlines
                 for j in desc_extra
                 if j < len(r) and r[j] and str(r[j]).strip()
             ]
-            if len(parts) >= 2 and parts[1].lower().startswith(parts[0].lower()):
-                item["description"] = parts[1]  # col 3 already contains the name
-            elif parts:
-                item["description"] = " - ".join(parts)
+            if len(parts) >= 2:
+                item["product_name_local"] = parts[0]
+                item["description"] = parts[1]
+            elif len(parts) == 1:
+                item["description"] = parts[0]
         # Also store the raw packing string (e.g. "36pcs/ctn") in packaging.
         if packing_col is not None and packing_col < len(r) and r[packing_col]:
             raw_pack = str(r[packing_col]).strip()
@@ -329,6 +348,20 @@ def load_sales_lines_from_csv(
         if current_section:
             item["section"] = current_section
         lines.append(item)
+
+    # If no standard 5-number footer row was found, synthesise one by summing
+    # the section subtotals (e.g. "1237CTNS … 68.058CBM … 19212.5KGS" rows).
+    # total_amount_rmb is deliberately excluded: section subtotals may show a
+    # net payable amount after deposit/credit adjustments that are not product
+    # line items, so the amount won't match the sum of individual item amounts.
+    if footer is None and section_subtotals:
+        grand: dict[str, Any] = {}
+        for field in ("total_cartons", "total_quantity", "total_cbm", "total_weight_kg"):
+            vals = [s[field] for s in section_subtotals if field in s]
+            if vals:
+                grand[field] = round(sum(vals), 6)
+        if grand:
+            footer = grand
 
     return lines, footer
 
