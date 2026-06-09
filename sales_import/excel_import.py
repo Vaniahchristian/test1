@@ -39,25 +39,29 @@ _OPTIONAL_FLOAT_FIELDS = frozenset(
 # (internal_key, substrings) — first substring match wins in column order for that key.
 # More specific aliases must appear before looser ones in this list.
 _HEADER_RULES: list[tuple[str, tuple[str, ...]]] = [
+    # item_code before line_no: "ITEM NO." contains "no." so item_code must claim it first.
+    ("item_code", ("item no", "item code", "产品货号", "item_no", "sku")),
     ("line_no", ("no.", "编号", "line no", "seq", "row no")),
     ("delivery_no", ("del no", "送货单号", "delivery")),
     ("customer_item_ref", ("cus no", "客户货号", "cust")),
-    ("item_code", ("item no", "item code", "产品货号", "item_no", "sku")),
     ("description", ("des.", "描述", "description", "品名英")),
-    ("total_cartons", ("总箱数", "ctn", "carton", "箱数")),
-    ("qty_per_carton", ("每箱", "pcs/ctn", "qpc", "qty per", "per carton")),
+    ("total_cartons", ("总箱数", "t.ctn", "ctn", "carton", "箱数")),
+    ("qty_per_carton", ("每箱", "pcs/ctn", "qpc", "qty per", "per carton", "packing")),
     ("total_quantity", ("t.qty", "t qty", "总数量", "total qty", "ttl qty", "tq")),
-    ("unit_price_rmb", ("u/p", "单价", "unit price")),
+    # unit_price_rmb before total_amount_rmb: "U.PRICE (RMB)" contains "rmb" which
+    # total_amount_rmb would steal before unit_price_rmb gets a chance.
+    ("unit_price_rmb", ("u/p", "u.price", "单价", "unit price")),
     ("total_amount_rmb", ("amount", "金额", "rmb", "amount rmb")),
     ("dim_l_cm", ("外箱长", "length", "l(cm)", "l (cm)", "dim l")),
     ("dim_w_cm", ("外箱宽", "width", "w(cm)", "w (cm)", "dim w")),
     ("dim_h_cm", ("外箱高", "height", "h(cm)", "h (cm)", "dim h")),
     ("unit_cbm", ("unit cbm", "cbm/ctn", "单箱体积")),
-    ("total_cbm", ("ttl cbm", "total cbm", "line cbm", "t.t.cbm", "t.t. cbm", "line vol")),
-    ("unit_weight_kg", ("g.w", "gw.", "unit kg", "单箱重量", "毛重")),
+    ("total_cbm", ("ttl cbm", "total cbm", "line cbm", "t.t.cbm", "t.t. cbm", "t.cbm", "line vol")),
+    # unit_weight_kg before unit: "UNIT WEIGHT" contains "unit" which the unit rule would steal.
+    ("unit_weight_kg", ("unit weight", "g.w", "gw.", "unit kg", "单箱重量", "毛重")),
     (
         "total_weight_kg",
-        ("ttl kgs", "ttl kg", "total kgs", "total kg", "总重量", "t.t.kgs", "t.t.kg", "t.t kg"),
+        ("t.weight", "ttl kgs", "ttl kg", "total kgs", "total kg", "总重量", "t.t.kgs", "t.t.kg", "t.t kg"),
     ),
     ("barcode", ("条形", "barcode", "ean")),
     ("warehouse", ("w.h", "warehouse", "仓库", "wh")),
@@ -66,6 +70,13 @@ _HEADER_RULES: list[tuple[str, tuple[str, ...]]] = [
     ("material", ("material", "材质")),
     ("remarks", ("rek", "remark", "备注")),
 ]
+
+# Section-header rows found in some CSV exports; maps normalised first-cell text → section value.
+_CSV_SECTION_MAP: dict[str, str] = {
+    "new order": "shipped",
+    "goods left behind": "left_in_warehouse",
+    "repacked": "repacked",
+}
 
 
 def _norm_header(cell: Any) -> str:
@@ -258,17 +269,53 @@ def load_sales_lines_from_csv(
             + repr(headers[:12])
         )
 
+    # Detect description continuation columns: empty-header cols immediately after the
+    # description col — arise when Excel exported a merged cell spanning several columns.
+    desc_col = next((j for j, f in col_to_field.items() if f == "description"), None)
+    desc_extra: list[int] = []
+    if desc_col is not None:
+        norm_hdrs = [_norm_header(h) for h in headers]
+        j = desc_col + 1
+        while j < len(headers) and j not in col_to_field and not norm_hdrs[j]:
+            desc_extra.append(j)
+            j += 1
+
     lines: list[dict[str, Any]] = []
     footer: dict[str, Any] | None = None
+    current_section: str | None = None
     for r in rows[hi + 1 :]:
         if not r or all(v is None or str(v).strip() == "" for v in r):
             continue
         if r[0] and _is_total_row(r[0]):
             footer = _parse_footer_numbers(r)
             continue
+        # Detect section-header rows (e.g. "NEW ORDER", "GOODS LEFT BEHIND").
+        first_norm = _norm_header(r[0]) if r[0] else ""
+        if first_norm in _CSV_SECTION_MAP:
+            current_section = _CSV_SECTION_MAP[first_norm]
+            continue
         item = _row_to_line(r, col_to_field, source="csv")
-        if item:
-            lines.append(item)
+        if not item:
+            continue
+        # Skip non-product rows (financial notes, freight lines) that have no quantity data.
+        if (
+            item.get("total_cartons") is None
+            and item.get("total_quantity") is None
+            and not item.get("description")
+        ):
+            continue
+        # Merge description from continuation columns when the mapped col was empty.
+        if desc_extra and not item.get("description"):
+            parts = [
+                str(r[j]).strip().replace("\r\n", "\n").replace("\r", "\n")
+                for j in desc_extra
+                if j < len(r) and r[j] and str(r[j]).strip()
+            ]
+            if parts:
+                item["description"] = "\n".join(parts)
+        if current_section:
+            item["section"] = current_section
+        lines.append(item)
 
     return lines, footer
 
