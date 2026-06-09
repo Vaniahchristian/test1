@@ -271,14 +271,20 @@ def load_sales_lines_from_csv(
 
     # Detect description continuation columns: empty-header cols immediately after the
     # description col — arise when Excel exported a merged cell spanning several columns.
+    norm_hdrs = [_norm_header(h) for h in headers]
     desc_col = next((j for j, f in col_to_field.items() if f == "description"), None)
     desc_extra: list[int] = []
     if desc_col is not None:
-        norm_hdrs = [_norm_header(h) for h in headers]
         j = desc_col + 1
         while j < len(headers) and j not in col_to_field and not norm_hdrs[j]:
             desc_extra.append(j)
             j += 1
+
+    # Track the PACKING column so we can also store the original string as packaging.
+    packing_col = next(
+        (j for j, f in col_to_field.items() if f == "qty_per_carton" and "packing" in norm_hdrs[j]),
+        None,
+    )
 
     lines: list[dict[str, Any]] = []
     footer: dict[str, Any] | None = None
@@ -307,12 +313,19 @@ def load_sales_lines_from_csv(
         # Merge description from continuation columns when the mapped col was empty.
         if desc_extra and not item.get("description"):
             parts = [
-                str(r[j]).strip().replace("\r\n", "\n").replace("\r", "\n")
+                " ".join(str(r[j]).split())  # collapse internal whitespace/newlines
                 for j in desc_extra
                 if j < len(r) and r[j] and str(r[j]).strip()
             ]
-            if parts:
-                item["description"] = "\n".join(parts)
+            if len(parts) >= 2 and parts[1].lower().startswith(parts[0].lower()):
+                item["description"] = parts[1]  # col 3 already contains the name
+            elif parts:
+                item["description"] = " - ".join(parts)
+        # Also store the raw packing string (e.g. "36pcs/ctn") in packaging.
+        if packing_col is not None and packing_col < len(r) and r[packing_col]:
+            raw_pack = str(r[packing_col]).strip()
+            if raw_pack:
+                item["packaging"] = raw_pack
         if current_section:
             item["section"] = current_section
         lines.append(item)
