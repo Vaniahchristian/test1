@@ -10,8 +10,9 @@ from sales_import.container_manifest_import import (
     _header_indices,
     _is_aggregate_row,
     _is_lone_text_row,
+    _process_manifest_data_rows,
 )
-from sales_import.manifest_sections import classify_section_banner
+from sales_import.manifest_sections import classify_section_banner, looks_like_section_banner
 
 _MANIFEST_HEADER = [
     "MARKS", "SHOP#", "ITEM NO.", "DESCRIPTION OF GOODS", "", "",
@@ -66,8 +67,43 @@ def test_is_aggregate_row_without_carton_count() -> None:
     assert _is_aggregate_row(real_row, idx) is False
 
 
+def test_looks_like_section_banner() -> None:
+    assert looks_like_section_banner("NEW ORDER-MS-4 GOODS LEFT BEHIND") is True
+    # Stray cell, not a heading: a bare number, or a single word.
+    assert looks_like_section_banner("25") is False
+    assert looks_like_section_banner("REMARKS") is False
+    # Data fragment, not a heading.
+    assert looks_like_section_banner("452.0KGS") is False
+    assert looks_like_section_banner("") is False
+
+
+def test_unclassified_banner_gets_other_section() -> None:
+    idx = _header_indices(_MANIFEST_HEADER)
+    item_row = [
+        "MS-402-2 SANCARGO", "新南方", "2", "", "Food Display Showcase", "66cm",
+        "", "", "50pcs", "", "", "", "", "", "", "0.0KGS", "￥600.00", "￥30,000.00", "",
+    ]
+    banner_row = ["NEW ORDER-MS-4 GOODS LEFT BEHIND"] + [""] * 18
+    stray_row = ["25"] + [""] * 18
+
+    # A real (if unrecognized) heading -> its own "other" bucket, not a guess.
+    lines, _, _, banners = _process_manifest_data_rows([banner_row, item_row], dict(idx))
+    assert lines[0]["section"] == "other"
+    assert banners[-1] == {
+        "text": "NEW ORDER-MS-4 GOODS LEFT BEHIND",
+        "section": "other",
+        "recognized": False,
+    }
+
+    # A stray cell that doesn't look like a heading must not flip the active section.
+    lines2, _, _, _ = _process_manifest_data_rows([stray_row, item_row], dict(idx))
+    assert lines2[0]["section"] == "shipped"
+
+
 if __name__ == "__main__":
     test_classify_section_banner()
     test_is_lone_text_row()
     test_is_aggregate_row_without_carton_count()
+    test_looks_like_section_banner()
+    test_unclassified_banner_gets_other_section()
     print("OK")

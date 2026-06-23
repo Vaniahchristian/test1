@@ -8,7 +8,7 @@ import re
 from typing import Any, Literal
 from urllib.parse import quote
 
-ManifestSection = Literal["shipped", "left_in_warehouse", "repacked"]
+ManifestSection = Literal["shipped", "left_in_warehouse", "repacked", "other"]
 
 SECTION_LABEL_PREFIX = "section_label:"
 
@@ -113,6 +113,26 @@ def is_repackaged_section_header(raw: str) -> bool:
         or re.search(r"REPACKED\s+GOODS", u)
         or re.search(r"\bREPACK(?:ED|AGED)?\b", u)
     )
+
+
+def looks_like_section_banner(raw: str) -> bool:
+    """Heading-shaped text vs. a stray cell (a bare number, a single word, ...).
+
+    Mirrors `isUnknownSectionBanner` in kato/inventory/lib/sections.ts (same
+    classification problem on the PDF-extraction side of this project): a real
+    banner is alpha-heavy, has no product/measurement tokens, and is a short
+    phrase rather than a single token or a long sentence.
+    """
+    text = re.sub(r"\s+", " ", (raw or "").strip())
+    if not text:
+        return False
+    upper = text.upper()
+    if not re.search(r"[A-Z一-鿿]", upper):
+        return False
+    if re.search(r"\b(PCS/CTN|CTNS?|CBM|KGS?|USD|RMB)\b", upper):
+        return False
+    word_count = len(upper.split())
+    return 2 <= word_count <= 18
 
 
 def classify_section_banner(row_text: str) -> tuple[ManifestSection | None, str | None]:

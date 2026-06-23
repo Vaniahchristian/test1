@@ -136,7 +136,7 @@ def _aggregate_section_line_totals(
     )
     for row in lines:
         sec = (row.get("section") or "shipped").strip().lower()
-        if sec not in ("shipped", "left_in_warehouse", "repacked"):
+        if sec not in ("shipped", "left_in_warehouse", "repacked", "other"):
             sec = "shipped"
         for k in _MANIFEST_SUM_KEYS:
             v = row.get(k)

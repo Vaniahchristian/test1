@@ -16,7 +16,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from sales_import.manifest_sections import classify_section_banner
+from sales_import.manifest_sections import classify_section_banner, looks_like_section_banner
 
 logger = logging.getLogger(__name__)
 
@@ -319,6 +319,8 @@ def load_sales_lines_from_csv(
                     current_section = sec
                     section_banners.append({"text": label, "section": sec, "recognized": True})
                 else:
+                    if looks_like_section_banner(raw_text):
+                        current_section = "other"
                     section_banners.append({"text": raw_text, "section": current_section, "recognized": False})
             continue
         item = _row_to_line(r, col_to_field, source="csv")

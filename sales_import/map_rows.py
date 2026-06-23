@@ -129,6 +129,7 @@ def extraction_row_to_document_item(
         "shipped",
         "left_in_warehouse",
         "repacked",
+        "other",
     ):
         section_val = sec_raw.strip().lower()
     else:

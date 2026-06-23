@@ -22,6 +22,7 @@ from sales_import.manifest_sections import (
     is_document_footer_row,
     is_goods_left_header,
     is_likely_yellow_subtotal_row,
+    looks_like_section_banner,
     merge_footer_from_line,
     should_persist_section_label,
 )
@@ -353,10 +354,13 @@ def _process_manifest_data_rows(
             continue
 
         if _is_lone_text_row(r):
-            # Heading wording the classifier doesn't recognize yet (or a stray cell).
-            # Keep the current section as-is rather than guessing, but never lose the
-            # text and never let it become a fake product line.
-            current_banner_label = joined
+            # Heading-shaped text the classifier doesn't recognize yet -> its own
+            # "other" bucket instead of guessing/carrying forward. A stray cell that
+            # doesn't look like a heading (a bare number, a single word) leaves the
+            # active section untouched -- never lose the text either way.
+            if looks_like_section_banner(joined):
+                current_section = "other"
+                current_banner_label = joined
             section_banners.append({"text": joined, "section": current_section, "recognized": False})
             _trace("unclassified_section_banner", csv_line=csv_line, text=joined)
             continue
