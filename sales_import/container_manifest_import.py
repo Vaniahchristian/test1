@@ -427,7 +427,11 @@ def _process_manifest_data_rows(
 
 
 def _is_aggregate_row(row: list[str], idx: dict[str, int]) -> bool:
-    """Subtotal row: mostly empty marks/shop, big CTN in T.CTN column."""
+    """Subtotal/correction row: no item identity, no per-line text — just leftover
+    metrics (CTN and/or CBM/weight) left over from a merged cell in the source sheet.
+    Doesn't require a CTN figure: some of these rows carry only a CBM/weight
+    correction (e.g. "3.5016CBM 452.0KGS") with no carton count at all.
+    """
     def g(name: str) -> str:
         j = idx.get(name)
         if j is None or j >= len(row):
@@ -442,9 +446,6 @@ def _is_aggregate_row(row: list[str], idx: dict[str, int]) -> bool:
     t_qty = g("t_qty")
     if t_qty and _RE_PCS.search(t_qty):
         return False
-    t_ctn = g("t_ctn")
-    if not t_ctn or not _RE_CTNS.search(t_ctn):
-        return False
     desc_bits = []
     ds = idx.get("desc_start")
     de = idx.get("desc_end", ds)
@@ -454,7 +455,10 @@ def _is_aggregate_row(row: list[str], idx: dict[str, int]) -> bool:
             desc_bits.append(str(row[j] or "").strip())
     if any(desc_bits):
         return False
-    return True
+    t_ctn = g("t_ctn")
+    has_ctn_signal = bool(t_ctn and _RE_CTNS.search(t_ctn))
+    has_metric_signal = any(g(name) for name in ("t_cbm", "t_weight", "unit_cbm", "unit_weight"))
+    return has_ctn_signal or has_metric_signal
 
 
 def _row_to_manifest_line(

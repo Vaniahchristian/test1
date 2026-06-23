@@ -6,8 +6,18 @@ classifier hasn't seen before must never be parsed as a fake product line.
 
 from __future__ import annotations
 
-from sales_import.container_manifest_import import _is_lone_text_row
+from sales_import.container_manifest_import import (
+    _header_indices,
+    _is_aggregate_row,
+    _is_lone_text_row,
+)
 from sales_import.manifest_sections import classify_section_banner
+
+_MANIFEST_HEADER = [
+    "MARKS", "SHOP#", "ITEM NO.", "DESCRIPTION OF GOODS", "", "",
+    "PACKING", "T.CTN", "T.QTY", "H", "W", "L", "UNIT CBM", "T.CBM",
+    "UNIT WEIGHT", "T.WEIGHT", "U.PRICE (RMB)", "T.AMOUNT", "Stuffed with",
+]
 
 
 def test_classify_section_banner() -> None:
@@ -41,7 +51,23 @@ def test_is_lone_text_row() -> None:
     assert _is_lone_text_row(["", "", ""]) is False
 
 
+def test_is_aggregate_row_without_carton_count() -> None:
+    idx = _header_indices(_MANIFEST_HEADER)
+    # MS-4 row 241: leftover CBM/weight correction, no marks/item/desc, no T.CTN.
+    cbm_weight_only_row = [
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "3.5016CBM", "", "452.0KGS", "", "", "",
+    ]
+    assert _is_aggregate_row(cbm_weight_only_row, idx) is True
+    # A real product row (has description) must never be treated as an aggregate row.
+    real_row = [
+        "MS-402-2 SANCARGO", "新南方", "2", "", "Food Display Showcase", "66cm",
+        "", "", "50pcs", "", "", "", "", "", "", "0.0KGS", "￥600.00", "￥30,000.00", "",
+    ]
+    assert _is_aggregate_row(real_row, idx) is False
+
+
 if __name__ == "__main__":
     test_classify_section_banner()
     test_is_lone_text_row()
+    test_is_aggregate_row_without_carton_count()
     print("OK")
