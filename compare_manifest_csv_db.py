@@ -46,7 +46,7 @@ def main() -> int:
     from sales_import.map_rows import extraction_row_to_document_item
 
     trace: list[dict[str, Any]] = []
-    raw_lines, footer, _subs = load_container_manifest_lines_from_csv(path, trace_events=trace)
+    raw_lines, footer, _subs, banners = load_container_manifest_lines_from_csv(path, trace_events=trace)
     norm_lines = normalize_line_items(list(raw_lines))
 
     fake_doc = "00000000-0000-0000-0000-000000000001"
@@ -59,6 +59,13 @@ def main() -> int:
     print(f"=== CSV: {path.name} ===")
     print(f"Parsed line items: {len(norm_lines)} | Footer cartons: {footer.get('total_cartons') if footer else None}")
     print()
+
+    unrecognized = [b for b in banners if not b.get("recognized")]
+    if unrecognized:
+        print(f"=== Section banners the classifier didn't recognize ({len(unrecognized)}) ===")
+        for b in unrecognized:
+            print(f"  {b['text']!r} (kept section={b['section']!r})")
+        print()
 
     trace_path = path.with_suffix(".compare_trace.json")
     trace_path.write_text(json.dumps(trace, ensure_ascii=False, indent=2), encoding="utf-8")

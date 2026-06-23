@@ -43,9 +43,32 @@ def is_new_order_section_header(raw: str) -> bool:
     joined = re.sub(r"\s+", " ", (raw or "").strip())
     if not joined or not re.search(r"\bNEW\s+ORDERS?\b", joined, re.I):
         return False
+    # Compound banners like "NEW ORDER-MS-4 GOODS LEFT BEHIND" are ambiguous —
+    # let the unclassified-banner fallback capture those instead of guessing.
+    if re.search(r"\bGOODS\b|\bLEFT\b", joined, re.I):
+        return False
     remainder = re.sub(r"\bNEW\s+ORDERS?\b", "", joined, flags=re.I)
-    remainder = re.sub(r"[\s.:—\-_]", "", remainder).strip()
-    return len(remainder) == 0
+    remainder = re.sub(r"[\s.:—\-_/]", "", remainder).strip()
+    # Allow a trailing order/lot code, e.g. "NEW ORDER-MS-4" -> remainder "MS4".
+    return remainder == "" or bool(re.fullmatch(r"[A-Za-z0-9]+", remainder))
+
+
+def classify_left_behind_now_status(raw: str) -> ManifestSection | None:
+    """Generic "LEFT BEHIND GOODS FROM <ref> NOW/NOT LOADED" banners.
+
+    Container refs vary per shipment (37-T-1, MS-3, MS-T-2, ...) so this matches on the
+    NOW/NOT LOADED qualifier rather than an exact phrase list. NOW LOADED means those
+    goods are loaded onto *this* shipment (shipped); NOT LOADED means still in the
+    warehouse.
+    """
+    u = (raw or "").upper()
+    if not re.search(r"\bLEFT\s+BEHIND\b", u) and not re.search(r"\bGOODS\s+LEFT\b", u):
+        return None
+    if re.search(r"\bNOT\s+LOADED\b", u):
+        return "left_in_warehouse"
+    if re.search(r"\bLOADED\b", u):
+        return "shipped"
+    return None
 
 
 def is_before_goods_header(raw: str) -> bool:
@@ -110,6 +133,9 @@ def classify_section_banner(row_text: str) -> tuple[ManifestSection | None, str 
         return "repacked", t
     if is_stuffed_container_header(t):
         return "shipped", t
+    loaded_status = classify_left_behind_now_status(t)
+    if loaded_status is not None:
+        return loaded_status, t
     return None, None
 
 

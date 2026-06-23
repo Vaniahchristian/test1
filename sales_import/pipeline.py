@@ -313,6 +313,8 @@ def _run_local_tabular_import(
     }
     if tabular_meta and tabular_meta.get("section_subtotals") is not None:
         summary["section_subtotals"] = tabular_meta["section_subtotals"]
+    if tabular_meta and tabular_meta.get("section_banners") is not None:
+        summary["section_banners"] = tabular_meta["section_banners"]
     _attach_manifest_summary_fields(summary, raw_lines, tabular_meta)
 
     if not write_db:
@@ -405,7 +407,7 @@ def run_import_csv(
     if not path.is_file():
         raise FileNotFoundError(path)
 
-    raw_lines, footer_totals = load_sales_lines_from_csv(path)
+    raw_lines, footer_totals, section_banners = load_sales_lines_from_csv(path)
     serializable: dict[str, Any] = {
         "source": "csv",
         "path": str(path),
@@ -420,6 +422,7 @@ def run_import_csv(
         parser_ver="csv-stdlib-v1",
         pipe_ver="v1-csv-import",
         model_nm="csv-upload",
+        tabular_meta={"section_banners": section_banners},
     )
 
 
@@ -580,7 +583,7 @@ def run_import_container_manifest(
         raise FileNotFoundError(path)
     suf = path.suffix.lower()
     if suf == ".csv":
-        raw_lines, footer_totals, section_subtotals = load_container_manifest_lines_from_csv(path)
+        raw_lines, footer_totals, section_subtotals, section_banners = load_container_manifest_lines_from_csv(path)
         serializable: dict[str, Any] = {
             "source": "container_manifest_csv",
             "path": str(path),
@@ -590,7 +593,7 @@ def run_import_container_manifest(
         pipe_ver = "v1-container-manifest-import"
         model_nm = "container-manifest-csv"
     elif suf in (".xlsx", ".xlsm"):
-        raw_lines, footer_totals, section_subtotals = load_container_manifest_lines_from_xlsx(
+        raw_lines, footer_totals, section_subtotals, section_banners = load_container_manifest_lines_from_xlsx(
             path, sheet_name=sheet_name
         )
         serializable = {
@@ -618,7 +621,7 @@ def run_import_container_manifest(
         pipe_ver=pipe_ver,
         model_nm=model_nm,
         document_type="container_manifest",
-        tabular_meta={"section_subtotals": section_subtotals},
+        tabular_meta={"section_subtotals": section_subtotals, "section_banners": section_banners},
     )
 
 

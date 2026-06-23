@@ -16,6 +16,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from sales_import.manifest_sections import classify_section_banner
+
 logger = logging.getLogger(__name__)
 
 _OPTIONAL_FLOAT_FIELDS = frozenset(
@@ -251,7 +253,7 @@ def load_sales_lines_from_csv(
     path: Path,
     *,
     encoding: str | None = None,
-) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
+) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[dict[str, Any]]]:
     path = path.expanduser().resolve()
     if not path.is_file():
         raise FileNotFoundError(path)
@@ -259,7 +261,7 @@ def load_sales_lines_from_csv(
     with path.open(encoding=enc, newline="") as f:
         rows = list(csv.reader(f))
     if not rows:
-        return [], None
+        return [], None, []
     hi = _find_csv_header_row_index(rows)
     headers = rows[hi]
     col_to_field = _map_headers(headers)
@@ -290,6 +292,7 @@ def load_sales_lines_from_csv(
     footer: dict[str, Any] | None = None
     current_section: str | None = None
     section_subtotals: list[dict[str, Any]] = []
+    section_banners: list[dict[str, Any]] = []
     _subtotal_fields = frozenset(
         {"total_cartons", "total_quantity", "total_cbm", "total_weight_kg", "total_amount_rmb"}
     )
@@ -299,10 +302,24 @@ def load_sales_lines_from_csv(
         if r[0] and _is_total_row(r[0]):
             footer = _parse_footer_numbers(r)
             continue
-        # Detect section-header rows (e.g. "NEW ORDER", "GOODS LEFT BEHIND").
-        first_norm = _norm_header(r[0]) if r[0] else ""
-        if first_norm in _CSV_SECTION_MAP:
-            current_section = _CSV_SECTION_MAP[first_norm]
+        # Section-header rows (e.g. "NEW ORDER", "GOODS LEFT BEHIND") and stray notes
+        # are exported as a single populated cell with everything else blank — never a
+        # real product row. Classify what we recognize; capture the rest verbatim so a
+        # heading the code has never seen doesn't silently disappear or skip the section.
+        nonblank_cells = [c for c in r if c and str(c).strip()]
+        if len(nonblank_cells) == 1:
+            raw_text = str(nonblank_cells[0]).strip()
+            first_norm = _norm_header(raw_text)
+            if first_norm in _CSV_SECTION_MAP:
+                current_section = _CSV_SECTION_MAP[first_norm]
+                section_banners.append({"text": raw_text, "section": current_section, "recognized": True})
+            else:
+                sec, label = classify_section_banner(raw_text)
+                if sec is not None:
+                    current_section = sec
+                    section_banners.append({"text": label, "section": sec, "recognized": True})
+                else:
+                    section_banners.append({"text": raw_text, "section": current_section, "recognized": False})
             continue
         item = _row_to_line(r, col_to_field, source="csv")
         if not item:
@@ -363,7 +380,7 @@ def load_sales_lines_from_csv(
         if grand:
             footer = grand
 
-    return lines, footer
+    return lines, footer, section_banners
 
 
 def load_sales_lines_from_xlsx(
@@ -430,6 +447,11 @@ def load_sales_lines_from_xlsx(
         if _is_total_row(vals[0]):
             footer = _parse_footer_numbers(vals)
             logger.info(f"Footer/TOTAL row found: {footer}")
+            continue
+        # Section banners / stray notes land in a single cell with everything else
+        # blank — never a real product row. Skip before _row_to_line risks reading
+        # that text as an item_code (see sales_import/manifest_sections.py).
+        if sum(1 for v in vals if v is not None and str(v).strip()) == 1:
             continue
         item = _row_to_line(vals, col_to_field, source="excel")
         if item:

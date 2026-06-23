@@ -218,6 +218,18 @@ def _joined_row(r: list[str]) -> str:
     return " ".join(p for p in parts if p).strip()
 
 
+def _is_lone_text_row(r: list[str]) -> bool:
+    """True when exactly one cell in the row has content.
+
+    Section banners and stray notes in these exports are written as a single populated
+    cell with every other column blank — a real product/footer/subtotal row always
+    populates at least two columns. This catches heading wording the classifier has
+    never seen (and any stray cell) without needing to know its exact text.
+    """
+    nonblank = [str(c).strip() for c in r if c and str(c).strip()]
+    return len(nonblank) == 1
+
+
 def _should_skip_misc_row(joined: str) -> bool:
     """Rows that are not banners, footers, subtotals, or products (edge noise)."""
     u = joined.strip().upper()
@@ -272,14 +284,16 @@ def _process_manifest_data_rows(
     *,
     csv_line_base: int | None = None,
     trace_out: list[dict[str, Any]] | None = None,
-) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[dict[str, Any]]]:
+) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[dict[str, Any]], list[dict[str, Any]]]:
     lines: list[dict[str, Any]] = []
     section_subtotals: list[dict[str, Any]] = []
+    section_banners: list[dict[str, Any]] = []
     footer_acc: dict[str, Any] = {}
 
     current_section: ManifestSection = "shipped"
     current_banner_label: str | None = None
     in_before_goods_block = False
+    footer_locked = False
     last_marks = ""
     last_shop = ""
 
@@ -314,6 +328,7 @@ def _process_manifest_data_rows(
                 in_before_goods_block = False
             last_marks = ""
             last_shop = ""
+            section_banners.append({"text": banner_label, "section": new_sec, "recognized": True})
             _trace(
                 "section_banner",
                 csv_line=csv_line,
@@ -323,8 +338,27 @@ def _process_manifest_data_rows(
             continue
 
         if is_document_footer_row(joined):
+            footer_locked = True
             merge_footer_from_line(footer_acc, joined)
             _trace("footer_total_row", csv_line=csv_line)
+            continue
+
+        if footer_locked:
+            # Real product/manifest rows never appear after the TOTAL row in these
+            # exports — everything from here on is the trailing cost/payment summary
+            # (REPACKING COST, GOODS BALANCE, payment terms, ...), however it's worded.
+            # Capture it on footer_text instead of risking a fake product line.
+            merge_footer_from_line(footer_acc, joined)
+            _trace("footer_tail_row", csv_line=csv_line, text=joined)
+            continue
+
+        if _is_lone_text_row(r):
+            # Heading wording the classifier doesn't recognize yet (or a stray cell).
+            # Keep the current section as-is rather than guessing, but never lose the
+            # text and never let it become a fake product line.
+            current_banner_label = joined
+            section_banners.append({"text": joined, "section": current_section, "recognized": False})
+            _trace("unclassified_section_banner", csv_line=csv_line, text=joined)
             continue
 
         is_yellow = (
@@ -389,7 +423,7 @@ def _process_manifest_data_rows(
         )
 
     footer_out = finalize_footer_totals(footer_acc)
-    return lines, footer_out, section_subtotals
+    return lines, footer_out, section_subtotals, section_banners
 
 
 def _is_aggregate_row(row: list[str], idx: dict[str, int]) -> bool:
@@ -577,7 +611,7 @@ def load_container_manifest_lines_from_csv(
     *,
     encoding: str | None = None,
     trace_events: list[dict[str, Any]] | None = None,
-) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[dict[str, Any]]]:
+) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[dict[str, Any]], list[dict[str, Any]]]:
     path = path.expanduser().resolve()
     if not path.is_file():
         raise FileNotFoundError(path)
@@ -585,7 +619,7 @@ def load_container_manifest_lines_from_csv(
     with path.open(encoding=enc, newline="") as f:
         rows = list(csv.reader(f))
     if not rows:
-        return [], None, []
+        return [], None, [], []
 
     header_idx: int | None = None
     idx: dict[str, int] | None = None
@@ -605,17 +639,17 @@ def load_container_manifest_lines_from_csv(
     if trace_events is not None:
         trace_kw["csv_line_base"] = header_idx + 2  # 1-based file line of first data row
         trace_kw["trace_out"] = trace_events
-    lines, footer_totals, section_subtotals = _process_manifest_data_rows(
+    lines, footer_totals, section_subtotals, section_banners = _process_manifest_data_rows(
         rows[header_idx + 1 :], idx, **trace_kw
     )
-    return lines, footer_totals, section_subtotals
+    return lines, footer_totals, section_subtotals, section_banners
 
 
 def load_container_manifest_lines_from_xlsx(
     path: Path,
     *,
     sheet_name: str | None = None,
-) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[dict[str, Any]]]:
+) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[dict[str, Any]], list[dict[str, Any]]]:
     path = path.expanduser().resolve()
     if not path.is_file():
         raise FileNotFoundError(path)
@@ -641,7 +675,7 @@ def load_container_manifest_lines_from_xlsx(
     wb.close()
 
     if not rows:
-        return [], None, []
+        return [], None, [], []
 
     header_idx: int | None = None
     idx: dict[str, int] | None = None
@@ -657,7 +691,7 @@ def load_container_manifest_lines_from_xlsx(
             "Not a recognized container manifest Excel (expected headers: MARKS, T.CTN, T.QTY, …)."
         )
 
-    lines, footer_totals, section_subtotals = _process_manifest_data_rows(
+    lines, footer_totals, section_subtotals, section_banners = _process_manifest_data_rows(
         rows[header_idx + 1 :], idx
     )
-    return lines, footer_totals, section_subtotals
+    return lines, footer_totals, section_subtotals, section_banners
