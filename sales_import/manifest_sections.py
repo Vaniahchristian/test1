@@ -283,6 +283,15 @@ def merge_footer_from_line(footer: dict[str, Any], row_text: str) -> None:
             v = _f(r"[¥￥\uffe5]\s*([\d,]+(?:\.\d+)?)")
         if v is not None:
             footer["total_amount_rmb"] = v
+        usd = extract_usd_amount(flat, anchor="TOTAL COST")
+        if usd is not None:
+            footer["total_amount_usd"] = usd
+    if re.search(r"\bEXCHANGE\s+RATE\b", uc):
+        rate = _f(r"EXCHANGE\s+RATE\s*[:\s,]*([\d.]+)", re.I)
+        if rate is None:
+            rate = _f(r"([\d.]+)\s*RMB\s*/\s*USD", re.I)
+        if rate is not None:
+            footer["exchange_rate"] = rate
 
     parts: list[str] = []
     if footer.get("total_cartons") is not None:
@@ -297,6 +306,124 @@ def merge_footer_from_line(footer: dict[str, Any], row_text: str) -> None:
         parts.append(str(footer["total_weight_kg"]))
     if parts:
         footer["footer_text"] = "TOTAL: " + " ".join(parts)
+
+
+def extract_usd_amount(text: str, *, anchor: str | None = None) -> float | None:
+    """First positive USD amount in text (optionally after an anchor phrase)."""
+    flat = re.sub(r"\s+", " ", (text or "").strip())
+    if not flat:
+        return None
+    window = flat
+    if anchor:
+        idx = flat.upper().find(anchor.upper())
+        if idx < 0:
+            return None
+        window = flat[idx : idx + 160]
+    for pat in (
+        r"\$\s*([\d,]+(?:\.\d+)?)",
+        r"USD\s*[:\-]?\s*\$?\s*([\d,]+(?:\.\d+)?)",
+    ):
+        m = re.search(pat, window, re.I)
+        if not m:
+            continue
+        try:
+            v = float(m.group(1).replace(",", ""))
+        except ValueError:
+            continue
+        if v > 0:
+            return v
+    return None
+
+
+def _payment_label_from_line(flat: str) -> str:
+    """Short label for document_payments.note from a footer/payment CSV row."""
+    uc = flat.upper()
+    if re.search(r"YIWU.{0,12}MOMBASA.{0,12}FREIGHT", flat, re.I):
+        return "YIWU-MOMBASA FREIGHT"
+    if re.search(r"CREDIT\s+SUPPORT", uc):
+        return "CREDIT SUPPORT TO MOMBASA"
+    if re.search(r"\bTOTAL\s+BALANCE\b", uc):
+        return "TOTAL BALANCE"
+    if re.search(r"GOODS\s+BALANCE", uc):
+        return "GOODS BALANCE"
+    if re.search(r"CHANGE\s+CONSIGNEE", uc):
+        m = re.match(r"^([^,$\d]+)", flat)
+        return (m.group(1).strip() if m else flat)[:80]
+    if re.search(r"\bPIVOC\b", uc):
+        return "PIVOC"
+    if re.search(r"REPACK", uc):
+        return "REPACKING"
+    if re.search(r"\bPAYMENT\b", uc):
+        return "PAYMENT"
+    m = re.match(r"^([A-Za-z][A-Za-z0-9\s./\-]{2,60})", flat)
+    return (m.group(1).strip() if m else flat)[:80]
+
+
+def parse_manifest_payment_line(row_text: str) -> dict[str, Any] | None:
+    """
+    One USD payment/fee line from a container-manifest footer block.
+    Returns {amount_usd, payment_type, note, payment_date?} or None.
+    """
+    flat = re.sub(r"\s+", " ", (row_text or "").strip())
+    if not flat:
+        return None
+    uc = flat.upper()
+    if re.search(r"\bTOTAL\s+(WEIGHT|CBM|CARTON|COST)\b", uc):
+        return None
+    if re.search(
+        r"IF\s+OUTSTANDING\s+BALANCE|PAYMENT\s+DELAY\s+SURCHARGE|"
+        r"BALANCE\s+PAYMENT\s+TERMS|VESSEL\s+ARRIVAL|REDUCE\s+DETAILS|REDUCE\s+\d+\s*CTN",
+        uc,
+    ):
+        return None
+
+    amount = extract_usd_amount(flat)
+    if amount is None:
+        return None
+
+    note = _payment_label_from_line(flat)
+    payment_type = "other"
+    if re.search(r"YIWU.{0,12}MOMBASA.{0,12}FREIGHT", flat, re.I):
+        payment_type = "freight"
+    elif re.search(r"CREDIT\s+SUPPORT", uc):
+        payment_type = "credit"
+    elif re.search(r"\bTOTAL\s+BALANCE\b", uc):
+        payment_type = "balance"
+    elif re.search(r"\bPAYMENT\b", uc) and re.search(
+        r"\b\d{1,2}[/-]\d{1,2}[/-]\d{4}\b|\b\d{4}[/-]\d{1,2}[/-]\d{1,2}\b", flat
+    ):
+        payment_type = "deposit"
+
+    payment_date: str | None = None
+    dm = re.search(r"\b(\d{4})-(\d{1,2})-(\d{1,2})\b", flat)
+    if dm:
+        payment_date = f"{dm.group(1)}-{int(dm.group(2)):02d}-{int(dm.group(3)):02d}"
+    else:
+        dm2 = re.search(r"\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b", flat)
+        if dm2:
+            payment_date = (
+                f"{dm2.group(3)}-{int(dm2.group(2)):02d}-{int(dm2.group(1)):02d}"
+            )
+
+    return {
+        "amount_usd": amount,
+        "payment_type": payment_type,
+        "note": note,
+        "payment_date": payment_date,
+    }
+
+
+def append_manifest_payment(
+    payments: list[dict[str, Any]], row_text: str
+) -> None:
+    """Parse one footer row; append if new (dedupe by note + amount)."""
+    parsed = parse_manifest_payment_line(row_text)
+    if not parsed:
+        return
+    key = (parsed.get("note"), parsed.get("amount_usd"))
+    if any((p.get("note"), p.get("amount_usd")) == key for p in payments):
+        return
+    payments.append(parsed)
 
 
 def finalize_footer_totals(footer: dict[str, Any]) -> dict[str, Any] | None:

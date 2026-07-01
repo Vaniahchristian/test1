@@ -87,7 +87,7 @@ def test_unclassified_banner_gets_other_section() -> None:
     stray_row = ["25"] + [""] * 18
 
     # A real (if unrecognized) heading -> its own "other" bucket, not a guess.
-    lines, _, _, banners = _process_manifest_data_rows([banner_row, item_row], dict(idx))
+    lines, _, _, banners, _ = _process_manifest_data_rows([banner_row, item_row], dict(idx))
     assert lines[0]["section"] == "other"
     assert banners[-1] == {
         "text": "NEW ORDER-MS-4 GOODS LEFT BEHIND",
@@ -96,7 +96,7 @@ def test_unclassified_banner_gets_other_section() -> None:
     }
 
     # A stray cell that doesn't look like a heading must not flip the active section.
-    lines2, _, _, _ = _process_manifest_data_rows([stray_row, item_row], dict(idx))
+    lines2, _, _, _, _ = _process_manifest_data_rows([stray_row, item_row], dict(idx))
     assert lines2[0]["section"] == "shipped"
 
 

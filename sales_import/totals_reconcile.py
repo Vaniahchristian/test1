@@ -130,6 +130,34 @@ def reconcile_totals(
     return match, diff if diff else {}
 
 
+def insert_document_payments(
+    sb: Client,
+    *,
+    document_id: str,
+    payments: list[dict[str, Any]],
+) -> int:
+    if not payments:
+        return 0
+    rows: list[dict[str, Any]] = []
+    for p in payments:
+        amt = _to_float(p.get("amount_usd"))
+        if amt is None or amt <= 0:
+            continue
+        rows.append(
+            {
+                "document_id": document_id,
+                "payment_date": p.get("payment_date"),
+                "amount_usd": amt,
+                "payment_type": (p.get("payment_type") or "other"),
+                "note": (p.get("note") or "")[:200] or None,
+            }
+        )
+    if not rows:
+        return 0
+    ins = sb.table("document_payments").insert(rows).execute()
+    return len(ins.data or rows)
+
+
 def upsert_document_totals_row(
     sb: Client,
     *,
@@ -150,6 +178,7 @@ def upsert_document_totals_row(
         "total_cbm": _to_float(pdf_footer.get("total_cbm")) if pdf_footer else None,
         "total_weight_kg": _to_float(pdf_footer.get("total_weight_kg")) if pdf_footer else None,
         "total_amount_rmb": _to_float(pdf_footer.get("total_amount_rmb")) if pdf_footer else None,
+        "total_amount_usd": _to_float(pdf_footer.get("total_amount_usd")) if pdf_footer else None,
         "computed_cartons": computed["total_cartons"],
         "computed_quantity": computed["total_quantity"],
         "computed_cbm": computed["total_cbm"],

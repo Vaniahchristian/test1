@@ -28,6 +28,7 @@ from sales_import.schema import (
 )
 from sales_import.supabase_client import get_supabase
 from sales_import.totals_reconcile import (
+    insert_document_payments,
     merge_footer_totals_from_parts,
     reconcile_totals,
     refresh_totals_for_document,
@@ -291,6 +292,7 @@ def _run_local_tabular_import(
     model_nm: str,
     document_type: str = "sales_order",
     tabular_meta: dict[str, Any] | None = None,
+    manifest_payments: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Shared path for Excel / CSV: normalize, footer align, optional Supabase insert."""
     footer_totals = enrich_footer_totals(footer_totals)
@@ -307,6 +309,7 @@ def _run_local_tabular_import(
         "footer_align": footer_align_meta,
         "document_id": None,
         "items_inserted": 0,
+        "payments_inserted": 0,
         "totals_match": None,
         "totals_diff": None,
         "extract_summary": None,
@@ -315,6 +318,8 @@ def _run_local_tabular_import(
         summary["section_subtotals"] = tabular_meta["section_subtotals"]
     if tabular_meta and tabular_meta.get("section_banners") is not None:
         summary["section_banners"] = tabular_meta["section_banners"]
+    if manifest_payments:
+        summary["manifest_payments"] = manifest_payments
     _attach_manifest_summary_fields(summary, raw_lines, tabular_meta)
 
     if not write_db:
@@ -332,6 +337,8 @@ def _run_local_tabular_import(
         for k, v in tabular_meta.items():
             if v is not None:
                 normalized_payload[k] = v
+    if manifest_payments:
+        normalized_payload["manifest_payments"] = manifest_payments
     if document_type == "container_manifest":
         for key in (
             "section_line_totals",
@@ -384,6 +391,13 @@ def _run_local_tabular_import(
     )
     summary["totals_match"] = reconciled["totals_match"]
     summary["totals_diff"] = reconciled["totals_diff"]
+
+    if manifest_payments:
+        summary["payments_inserted"] = insert_document_payments(
+            sb,
+            document_id=document_id,
+            payments=manifest_payments,
+        )
 
     sb.table("documents").update(
         {
@@ -583,7 +597,7 @@ def run_import_container_manifest(
         raise FileNotFoundError(path)
     suf = path.suffix.lower()
     if suf == ".csv":
-        raw_lines, footer_totals, section_subtotals, section_banners = load_container_manifest_lines_from_csv(path)
+        raw_lines, footer_totals, section_subtotals, section_banners, manifest_payments = load_container_manifest_lines_from_csv(path)
         serializable: dict[str, Any] = {
             "source": "container_manifest_csv",
             "path": str(path),
@@ -593,7 +607,7 @@ def run_import_container_manifest(
         pipe_ver = "v1-container-manifest-import"
         model_nm = "container-manifest-csv"
     elif suf in (".xlsx", ".xlsm"):
-        raw_lines, footer_totals, section_subtotals, section_banners = load_container_manifest_lines_from_xlsx(
+        raw_lines, footer_totals, section_subtotals, section_banners, manifest_payments = load_container_manifest_lines_from_xlsx(
             path, sheet_name=sheet_name
         )
         serializable = {
@@ -622,6 +636,7 @@ def run_import_container_manifest(
         model_nm=model_nm,
         document_type="container_manifest",
         tabular_meta={"section_subtotals": section_subtotals, "section_banners": section_banners},
+        manifest_payments=manifest_payments,
     )
 
 

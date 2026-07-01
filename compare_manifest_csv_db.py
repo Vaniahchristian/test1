@@ -46,7 +46,7 @@ def main() -> int:
     from sales_import.map_rows import extraction_row_to_document_item
 
     trace: list[dict[str, Any]] = []
-    raw_lines, footer, _subs, banners = load_container_manifest_lines_from_csv(path, trace_events=trace)
+    raw_lines, footer, _subs, banners, _payments = load_container_manifest_lines_from_csv(path, trace_events=trace)
     norm_lines = normalize_line_items(list(raw_lines))
 
     fake_doc = "00000000-0000-0000-0000-000000000001"

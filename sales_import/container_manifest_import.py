@@ -15,6 +15,7 @@ from typing import Any, Callable
 from sales_import.manifest_sections import (
     ManifestSection,
     append_section_label,
+    append_manifest_payment,
     classify_section_banner,
     extract_yellow_subtotal_metrics,
     finalize_footer_totals,
@@ -290,6 +291,7 @@ def _process_manifest_data_rows(
     section_subtotals: list[dict[str, Any]] = []
     section_banners: list[dict[str, Any]] = []
     footer_acc: dict[str, Any] = {}
+    footer_payments: list[dict[str, Any]] = []
 
     current_section: ManifestSection = "shipped"
     current_banner_label: str | None = None
@@ -341,6 +343,7 @@ def _process_manifest_data_rows(
         if is_document_footer_row(joined):
             footer_locked = True
             merge_footer_from_line(footer_acc, joined)
+            append_manifest_payment(footer_payments, joined)
             _trace("footer_total_row", csv_line=csv_line)
             continue
 
@@ -350,6 +353,7 @@ def _process_manifest_data_rows(
             # (REPACKING COST, GOODS BALANCE, payment terms, ...), however it's worded.
             # Capture it on footer_text instead of risking a fake product line.
             merge_footer_from_line(footer_acc, joined)
+            append_manifest_payment(footer_payments, joined)
             _trace("footer_tail_row", csv_line=csv_line, text=joined)
             continue
 
@@ -427,7 +431,7 @@ def _process_manifest_data_rows(
         )
 
     footer_out = finalize_footer_totals(footer_acc)
-    return lines, footer_out, section_subtotals, section_banners
+    return lines, footer_out, section_subtotals, section_banners, footer_payments
 
 
 def _is_aggregate_row(row: list[str], idx: dict[str, int]) -> bool:
@@ -619,7 +623,7 @@ def load_container_manifest_lines_from_csv(
     *,
     encoding: str | None = None,
     trace_events: list[dict[str, Any]] | None = None,
-) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[dict[str, Any]], list[dict[str, Any]]]:
+) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     path = path.expanduser().resolve()
     if not path.is_file():
         raise FileNotFoundError(path)
@@ -627,7 +631,7 @@ def load_container_manifest_lines_from_csv(
     with path.open(encoding=enc, newline="") as f:
         rows = list(csv.reader(f))
     if not rows:
-        return [], None, [], []
+        return [], None, [], [], []
 
     header_idx: int | None = None
     idx: dict[str, int] | None = None
@@ -647,17 +651,17 @@ def load_container_manifest_lines_from_csv(
     if trace_events is not None:
         trace_kw["csv_line_base"] = header_idx + 2  # 1-based file line of first data row
         trace_kw["trace_out"] = trace_events
-    lines, footer_totals, section_subtotals, section_banners = _process_manifest_data_rows(
+    lines, footer_totals, section_subtotals, section_banners, footer_payments = _process_manifest_data_rows(
         rows[header_idx + 1 :], idx, **trace_kw
     )
-    return lines, footer_totals, section_subtotals, section_banners
+    return lines, footer_totals, section_subtotals, section_banners, footer_payments
 
 
 def load_container_manifest_lines_from_xlsx(
     path: Path,
     *,
     sheet_name: str | None = None,
-) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[dict[str, Any]], list[dict[str, Any]]]:
+) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     path = path.expanduser().resolve()
     if not path.is_file():
         raise FileNotFoundError(path)
@@ -683,7 +687,7 @@ def load_container_manifest_lines_from_xlsx(
     wb.close()
 
     if not rows:
-        return [], None, [], []
+        return [], None, [], [], []
 
     header_idx: int | None = None
     idx: dict[str, int] | None = None
@@ -699,7 +703,7 @@ def load_container_manifest_lines_from_xlsx(
             "Not a recognized container manifest Excel (expected headers: MARKS, T.CTN, T.QTY, …)."
         )
 
-    lines, footer_totals, section_subtotals, section_banners = _process_manifest_data_rows(
+    lines, footer_totals, section_subtotals, section_banners, footer_payments = _process_manifest_data_rows(
         rows[header_idx + 1 :], idx
     )
-    return lines, footer_totals, section_subtotals, section_banners
+    return lines, footer_totals, section_subtotals, section_banners, footer_payments
