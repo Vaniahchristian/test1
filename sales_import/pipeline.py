@@ -279,6 +279,15 @@ def _utc_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _display_source_file_name(path: Path, source_file_name: str | None) -> str:
+    """Prefer the client upload name; never persist tempfile basenames like tmpXXXX.csv."""
+    if source_file_name:
+        base = Path(str(source_file_name).replace("\\", "/")).name.strip()
+        if base:
+            return base
+    return path.name
+
+
 def _run_local_tabular_import(
     path: Path,
     *,
@@ -293,14 +302,17 @@ def _run_local_tabular_import(
     document_type: str = "sales_order",
     tabular_meta: dict[str, Any] | None = None,
     manifest_payments: list[dict[str, Any]] | None = None,
+    source_file_name: str | None = None,
 ) -> dict[str, Any]:
     """Shared path for Excel / CSV: normalize, footer align, optional Supabase insert."""
     footer_totals = enrich_footer_totals(footer_totals)
     raw_lines = normalize_line_items(raw_lines)
     footer_align_meta = align_rows_to_footer(raw_lines, footer_totals)
+    display_name = _display_source_file_name(path, source_file_name)
 
     summary: dict[str, Any] = {
         "file": str(path),
+        "source_file_name": display_name,
         "document_type": document_type,
         "import_reducto_mode": import_reducto_mode,
         "line_count": len(raw_lines),
@@ -351,7 +363,7 @@ def _run_local_tabular_import(
                 normalized_payload[key] = summary[key]
     doc_row = {
         "document_type": document_type,
-        "source_file_name": path.name,
+        "source_file_name": display_name,
         "source_file_path": str(path),
         "extraction_status": "review_needed",
         "parser_version": parser_ver,
@@ -416,6 +428,7 @@ def run_import_csv(
     path: Path,
     *,
     write_db: bool = True,
+    source_file_name: str | None = None,
 ) -> dict[str, Any]:
     path = path.expanduser().resolve()
     if not path.is_file():
@@ -437,6 +450,7 @@ def run_import_csv(
         pipe_ver="v1-csv-import",
         model_nm="csv-upload",
         tabular_meta={"section_banners": section_banners},
+        source_file_name=source_file_name,
     )
 
 
@@ -445,6 +459,7 @@ def run_import_excel(
     *,
     write_db: bool = True,
     sheet_name: str | None = None,
+    source_file_name: str | None = None,
 ) -> dict[str, Any]:
     path = path.expanduser().resolve()
     if not path.is_file():
@@ -466,6 +481,7 @@ def run_import_excel(
         parser_ver="excel-openpyxl-v1",
         pipe_ver="v1-excel-import",
         model_nm="excel-upload",
+        source_file_name=source_file_name,
     )
 
 
@@ -474,6 +490,7 @@ def run_import(
     *,
     write_db: bool = True,
     excel_sheet: str | None = None,
+    source_file_name: str | None = None,
 ) -> dict[str, Any]:
     _ensure_dotenv()
     path = path.expanduser().resolve()
@@ -482,9 +499,14 @@ def run_import(
 
     suf = path.suffix.lower()
     if suf in (".xlsx", ".xlsm"):
-        return run_import_excel(path, write_db=write_db, sheet_name=excel_sheet)
+        return run_import_excel(
+            path,
+            write_db=write_db,
+            sheet_name=excel_sheet,
+            source_file_name=source_file_name,
+        )
     if suf == ".csv":
-        return run_import_csv(path, write_db=write_db)
+        return run_import_csv(path, write_db=write_db, source_file_name=source_file_name)
 
     mode = _import_reducto_mode()
     extract_response, raw_lines, footer_totals, parse_table_count = extract_sales_pdf(path)
@@ -492,9 +514,11 @@ def run_import(
     raw_lines = normalize_line_items(raw_lines)
     footer_align_meta = align_rows_to_footer(raw_lines, footer_totals)
     serializable = _serialize_extract_for_jsonb(extract_response)
+    display_name = _display_source_file_name(path, source_file_name)
 
     summary: dict[str, Any] = {
         "file": str(path),
+        "source_file_name": display_name,
         "import_reducto_mode": mode,
         "line_count": len(raw_lines),
         "parse_html_table_count": parse_table_count,
@@ -526,7 +550,7 @@ def run_import(
     model_nm = "reducto-parse" if mode == "parse" else "reducto-extract"
     doc_row = {
         "document_type": "sales_order",
-        "source_file_name": path.name,
+        "source_file_name": display_name,
         "source_file_path": str(path),
         "extraction_status": "review_needed",
         "parser_version": parser_ver,
@@ -589,6 +613,7 @@ def run_import_container_manifest(
     *,
     write_db: bool = True,
     sheet_name: str | None = None,
+    source_file_name: str | None = None,
 ) -> dict[str, Any]:
     """Import container manifest CSV or Excel (marks / T.CTN / T.QTY layout)."""
     _ensure_dotenv()
@@ -637,6 +662,7 @@ def run_import_container_manifest(
         document_type="container_manifest",
         tabular_meta={"section_subtotals": section_subtotals, "section_banners": section_banners},
         manifest_payments=manifest_payments,
+        source_file_name=source_file_name,
     )
 
 

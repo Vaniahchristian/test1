@@ -84,7 +84,12 @@ def import_document(
         logger.info(f"Temp file created: {tmp_path}")
 
         logger.info("Calling run_import...")
-        result = run_import(tmp_path, write_db=not dry_run, excel_sheet=sheet)
+        result = run_import(
+            tmp_path,
+            write_db=not dry_run,
+            excel_sheet=sheet,
+            source_file_name=name,
+        )
         logger.info(f"Import successful - lines: {result.get('line_count', 0)}, items_inserted: {result.get('items_inserted', 0)}")
         return result
     except HTTPException as e:
@@ -140,7 +145,10 @@ def import_container_manifest(
         tmp_path.write_bytes(data)
 
         result = run_import_container_manifest(
-            tmp_path, write_db=not dry_run, sheet_name=sheet
+            tmp_path,
+            write_db=not dry_run,
+            sheet_name=sheet,
+            source_file_name=name,
         )
         logger.info(
             f"Manifest import done - lines: {result.get('line_count', 0)}, "
