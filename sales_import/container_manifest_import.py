@@ -358,12 +358,15 @@ def _process_manifest_data_rows(
             continue
 
         if _is_lone_text_row(r):
-            # Heading-shaped text the classifier doesn't recognize yet -> its own
-            # "other" bucket instead of guessing/carrying forward. A stray cell that
-            # doesn't look like a heading (a bare number, a single word) leaves the
-            # active section untouched -- never lose the text either way.
+            # Heading-shaped text the classifier doesn't recognize yet.
+            # Titles change per file (e.g. "MMB GOODS LOAD IN THIS CONTANIER") — keep
+            # the banner label on following rows so the UI can split sections + totals.
+            # Prefer staying in "shipped" when already in the main table; only use
+            # "other" when we have no active section yet.
             if looks_like_section_banner(joined):
-                current_section = "other"
+                if current_section in (None, "", "other"):
+                    current_section = "other"
+                # else keep current_section (usually shipped) and just retitle
                 current_banner_label = joined
             section_banners.append({"text": joined, "section": current_section, "recognized": False})
             _trace("unclassified_section_banner", csv_line=csv_line, text=joined)

@@ -1,0 +1,9 @@
+Cleaned from sales.raw.csv
+shipped_rows=245 ctn=1176 qty=45211 cbm=77.827 kg=25327.9 rmb=338771.80
+left_rows=9 ctn=19 qty=459 cbm=2.576 kg=378.3 rmb=17982.00
+all_rows=254 ctn=1195 qty=45670 cbm=80.403 kg=25706.2 rmb=356753.80
+footer_declared={'TOTAL WEIGHT': '24342', 'TOTAL CBM': '74.2', 'TOTAL CARTON': '1111', 'TOTAL COST RMB': '356754', 'TOTAL COST USD': '53809'}
+Note: line-item carton/weight sums exceed footer TOTAL CARTON/WEIGHT;
+amount matches footer (~356754). Prefer line sums for re-import checks.
+Fixes: flattened multiline cells, removed #NAME?, stripped units/currency,
+single header row, bare numeric T.CTN/T.QTY/CBM/WEIGHT/PRICE/AMOUNT.

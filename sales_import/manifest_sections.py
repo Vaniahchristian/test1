@@ -101,6 +101,11 @@ def is_stuffed_container_header(raw: str) -> bool:
         or "STUFFED INTO THIS CO" in u
         or "GOODSHASBEENSTUFFEDINTOTHISCO" in compact
         or "GOODSHASBEENSTUFFEDINTOTHISCONTAINER" in compact
+        # KM-1 style: "MMB GOODS LOAD IN THIS CONTANIER" (typo common in exports)
+        or bool(re.search(r"\bGOODS\s+LOAD\s+IN\s+THIS\s+CONTAI?NIER?\b", u))
+        or "GOODSLOADINTHISCONTAINER" in compact
+        or "GOODSLOADINTHISCONTANIER" in compact
+        or "MMBGOODSLOAD" in compact
     )
 
 

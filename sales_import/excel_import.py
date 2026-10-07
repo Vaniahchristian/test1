@@ -44,11 +44,15 @@ _HEADER_RULES: list[tuple[str, tuple[str, ...]]] = [
     # item_code before line_no: "ITEM NO." contains "no." so item_code must claim it first.
     ("item_code", ("item no", "item code", "产品货号", "item_no", "sku")),
     ("line_no", ("no.", "编号", "line no", "seq", "row no")),
+    ("marks", ("marks", "唛头", "ord no", "销售单号")),
+    ("shop", ("shop#", "shop #", "shop", "供应商")),
     ("delivery_no", ("del no", "送货单号", "delivery")),
     ("customer_item_ref", ("cus no", "客户货号", "cust")),
     ("description", ("des.", "描述", "description", "品名英")),
-    ("total_cartons", ("总箱数", "t.ctn", "ctn", "carton", "箱数")),
+    # qty_per_carton BEFORE total_cartons: bare "ctn" must not steal "pcs/ctn" / packing headers.
     ("qty_per_carton", ("每箱", "pcs/ctn", "qpc", "qty per", "per carton", "packing")),
+    # Prefer explicit carton headers — avoid bare "ctn" (matches packing "pcs/ctn").
+    ("total_cartons", ("总箱数", "t.ctn", "t ctn", "total ctn", "total carton", "cartons", "箱数")),
     ("total_quantity", ("t.qty", "t qty", "总数量", "total qty", "ttl qty", "tq")),
     # unit_price_rmb before total_amount_rmb: "U.PRICE (RMB)" contains "rmb" which
     # total_amount_rmb would steal before unit_price_rmb gets a chance.
@@ -76,7 +80,9 @@ _HEADER_RULES: list[tuple[str, tuple[str, ...]]] = [
 # Section-header rows found in some CSV exports; maps normalised first-cell text → section value.
 _CSV_SECTION_MAP: dict[str, str] = {
     "new order": "shipped",
+    "new orders": "shipped",
     "goods left behind": "left_in_warehouse",
+    "goods left in sancargo": "left_in_warehouse",
     "repacked": "repacked",
 }
 
@@ -129,6 +135,16 @@ def _map_headers(headers: list[str]) -> dict[int, str]:
                 continue
             if any(a in h for a in aliases):
                 col_to_field[j] = key
+                used_cols.add(j)
+                break
+
+    # Fallback: header exactly CTN/CTNS (sales-order short header) — never "pcs/ctn".
+    if not any(f == "total_cartons" for f in col_to_field.values()):
+        for j, h in enumerate(norm):
+            if j in used_cols or not h:
+                continue
+            if h in ("ctn", "ctns", "carton") or re.fullmatch(r"ctn\.?", h):
+                col_to_field[j] = "total_cartons"
                 used_cols.add(j)
                 break
 

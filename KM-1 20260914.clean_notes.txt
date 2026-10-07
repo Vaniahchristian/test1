@@ -1,0 +1,6 @@
+wrote=KM-1 20260914.clean.csv
+NEW ORDERS lines=165 line_ctn=713  printed_subtotal={'ctn': '793', 'cbm': '68.789', 'kg': '17354.2', 'rmb': '310995.20'}
+MMB LOAD lines=14 line_ctn=65  printed_subtotal={'ctn': '65', 'cbm': '3.576', 'kg': '985.8', 'rmb': ''}
+footer TOTAL CARTON should be 793+65=858 → 858
+line_sum_all_ctn=778 (CSV may be short vs printed 793 if export omitted rows)
+amount_all=310995.20
