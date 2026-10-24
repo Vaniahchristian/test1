@@ -114,12 +114,20 @@ def _parse_qty_per_carton_from_packing(packing: str) -> float | None:
     if not packing:
         return None
     m = _RE_QPC.search(packing)
-    if not m:
-        return None
-    try:
-        return float(m.group(1).replace(",", ""))
-    except ValueError:
-        return None
+    if m:
+        try:
+            return float(m.group(1).replace(",", ""))
+        except ValueError:
+            return None
+    # Manifest Excel often stores PACKING as a bare pcs/ctn number ("4").
+    bare = packing.strip().replace(",", "")
+    if re.fullmatch(r"\d+(?:\.\d+)?", bare):
+        try:
+            n = float(bare)
+            return n if n > 0 else None
+        except ValueError:
+            return None
+    return None
 
 
 def is_container_manifest_header_row(cells: list[str]) -> bool:
@@ -299,6 +307,7 @@ def _process_manifest_data_rows(
     footer_locked = False
     last_marks = ""
     last_shop = ""
+    last_packing = ""
 
     def _trace(event: str, **extra: Any) -> None:
         if trace_out is None:
@@ -331,6 +340,7 @@ def _process_manifest_data_rows(
                 in_before_goods_block = False
             last_marks = ""
             last_shop = ""
+            last_packing = ""
             section_banners.append({"text": banner_label, "section": new_sec, "recognized": True})
             _trace(
                 "section_banner",
@@ -404,7 +414,9 @@ def _process_manifest_data_rows(
             _trace("skip_misc_banner", csv_line=csv_line)
             continue
 
-        item = _row_to_manifest_line(r, idx, last_marks=last_marks, last_shop=last_shop)
+        item = _row_to_manifest_line(
+            r, idx, last_marks=last_marks, last_shop=last_shop, last_packing=last_packing
+        )
         if not item:
             _trace("skip_no_item", csv_line=csv_line)
             continue
@@ -421,6 +433,9 @@ def _process_manifest_data_rows(
         s = (item.get("warehouse") or "").strip()
         if s:
             last_shop = s
+        pk = (item.get("packaging") or "").strip()
+        if pk:
+            last_packing = pk
 
         item_index = len(lines)
         lines.append(item)
@@ -478,6 +493,7 @@ def _row_to_manifest_line(
     *,
     last_marks: str,
     last_shop: str,
+    last_packing: str = "",
 ) -> dict[str, Any] | None:
     def g(name: str) -> str:
         j = idx.get(name)
@@ -500,7 +516,10 @@ def _row_to_manifest_line(
                 desc_parts.append(t)
     description = " | ".join(desc_parts) if desc_parts else ""
 
-    packing = g("packing")
+    # Carry PACKING text for display when Excel merges the cell; do NOT use carried
+    # packing to invent T.CTN — that double-counts against the yellow section bar.
+    packing_cell = g("packing")
+    packing = packing_cell or last_packing
     t_ctn_s = g("t_ctn")
     t_qty_s = g("t_qty")
 
@@ -523,17 +542,18 @@ def _row_to_manifest_line(
     dim_w = _cell_float(g("w"))
     dim_l = _cell_float(g("l"))
 
-    qpc = _parse_qty_per_carton_from_packing(packing)
+    qpc = _parse_qty_per_carton_from_packing(packing_cell) or _parse_qty_per_carton_from_packing(packing)
 
-    # Blank T.CTN but packing gives pcs/ctn — infer cartons from T.QTY (Excel often merges CTN visually).
+    # Only invent T.CTN when THIS row has an explicit packing cell (not carried).
     if (
         total_cartons is None
+        and packing_cell
         and total_quantity is not None
         and total_quantity > 0
-        and qpc is not None
-        and qpc > 0
     ):
-        total_cartons = float(max(1, math.ceil(float(total_quantity) / qpc - 1e-9)))
+        qpc_cell = _parse_qty_per_carton_from_packing(packing_cell)
+        if qpc_cell is not None and qpc_cell > 0:
+            total_cartons = float(max(1, math.ceil(float(total_quantity) / qpc_cell - 1e-9)))
 
     # Freight / DHL / "sending package" row: PDF often has no T.CTN (not a physical carton line).
     # Default OFF so we do not assign 1 CTN. Set MANIFEST_INFER_FREIGHT_PACKAGE_ONE_CTN=1 to restore old behavior.
@@ -660,11 +680,35 @@ def load_container_manifest_lines_from_csv(
     return lines, footer_totals, section_subtotals, section_banners, footer_payments
 
 
+def _sheet_rows_as_str(ws: Any) -> list[list[str]]:
+    rows: list[list[str]] = []
+    for tup in ws.iter_rows(values_only=True):
+        rows.append(["" if c is None else str(c) for c in tup])
+    return rows
+
+
+def _find_manifest_header(rows: list[list[str]]) -> tuple[int, dict[str, int]] | None:
+    for i, r in enumerate(rows):
+        if len(r) < 10:
+            continue
+        if is_container_manifest_header_row(r):
+            idx = _header_indices(r)
+            if "t_ctn" in idx:
+                return i, idx
+    return None
+
+
 def load_container_manifest_lines_from_xlsx(
     path: Path,
     *,
     sheet_name: str | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Load every worksheet that looks like (or continues) a container manifest.
+
+    Sheet1 usually has the MARKS / T.CTN header. Later sheets often continue the
+    same columns with no header (e.g. KM-1 Sheet2) — those are imported too so
+    rows are not silently dropped.
+    """
     path = path.expanduser().resolve()
     if not path.is_file():
         raise FileNotFoundError(path)
@@ -675,38 +719,92 @@ def load_container_manifest_lines_from_xlsx(
 
     wb = load_workbook(path, read_only=True, data_only=True)
     sn = sheet_name or os.environ.get("EXCEL_SHEET", "").strip() or None
-    if sn:
-        if sn not in wb.sheetnames:
-            wb.close()
-            raise ValueError(f"Sheet {sn!r} not in workbook; available: {wb.sheetnames}")
-        ws = wb[sn]
-    else:
-        ws = wb[wb.sheetnames[0]]
+    try:
+        if sn:
+            if sn not in wb.sheetnames:
+                raise ValueError(f"Sheet {sn!r} not in workbook; available: {wb.sheetnames}")
+            sheet_names = [sn]
+        else:
+            sheet_names = list(wb.sheetnames)
 
-    rows_iter = ws.iter_rows(values_only=True)
-    rows: list[list[str]] = []
-    for tup in rows_iter:
-        rows.append(["" if c is None else str(c) for c in tup])
-    wb.close()
+        all_lines: list[dict[str, Any]] = []
+        all_subs: list[dict[str, Any]] = []
+        all_banners: list[dict[str, Any]] = []
+        all_payments: list[dict[str, Any]] = []
+        footer_totals: dict[str, Any] | None = None
+        shared_idx: dict[str, int] | None = None
 
-    if not rows:
-        return [], None, [], [], []
+        for sheet_i, name in enumerate(sheet_names):
+            rows = _sheet_rows_as_str(wb[name])
+            if not any(any(c.strip() for c in r) for r in rows):
+                continue
 
-    header_idx: int | None = None
-    idx: dict[str, int] | None = None
-    for i, r in enumerate(rows):
-        if len(r) < 10:
-            continue
-        if is_container_manifest_header_row(r):
-            header_idx = i
-            idx = _header_indices(r)
-            break
-    if header_idx is None or idx is None or "t_ctn" not in idx:
-        raise ValueError(
-            "Not a recognized container manifest Excel (expected headers: MARKS, T.CTN, T.QTY, …)."
-        )
+            found = _find_manifest_header(rows)
+            if found is not None:
+                header_idx, idx = found
+                shared_idx = dict(idx)
+                data = rows[header_idx + 1 :]
+            elif shared_idx is not None:
+                # Continuation sheet (no header): keep column map, tag with sheet banner.
+                idx = dict(shared_idx)
+                banner = [f"SHEET {sheet_i + 1}"]
+                # Pad so lone-text detection still sees a mostly-empty row.
+                width = max((len(r) for r in rows), default=1)
+                banner.extend([""] * max(0, width - 1))
+                data = [banner] + rows
+            else:
+                continue
 
-    lines, footer_totals, section_subtotals, section_banners, footer_payments = _process_manifest_data_rows(
-        rows[header_idx + 1 :], idx
-    )
-    return lines, footer_totals, section_subtotals, section_banners, footer_payments
+            lines, footer, subs, banners, pays = _process_manifest_data_rows(data, idx)
+            # Tag continuation sheet products so Management can split them.
+            if found is None:
+                for line in lines:
+                    line["remarks"] = append_section_label(line.get("remarks"), f"SHEET {sheet_i + 1}")
+                # If the continuation sheet has no yellow bar, synthesize one from its lines
+                # so section totals stay aligned (don't double-add when a yellow already exists).
+                if lines and not subs:
+                    ctn = sum(float(x["total_cartons"]) for x in lines if x.get("total_cartons") is not None)
+                    if ctn:
+                        subs = [
+                            {
+                                "section": lines[0].get("section") or "shipped",
+                                "total_cartons": ctn,
+                                "total_cbm": sum(
+                                    float(x["total_cbm"]) for x in lines if x.get("total_cbm") is not None
+                                )
+                                or None,
+                                "total_weight_kg": sum(
+                                    float(x["total_weight_kg"])
+                                    for x in lines
+                                    if x.get("total_weight_kg") is not None
+                                )
+                                or None,
+                                "total_amount_rmb": sum(
+                                    float(x["total_amount_rmb"])
+                                    for x in lines
+                                    if x.get("total_amount_rmb") is not None
+                                )
+                                or None,
+                            }
+                        ]
+
+            all_lines.extend(lines)
+            all_subs.extend(subs)
+            all_banners.extend(banners)
+            all_payments.extend(pays)
+            if footer:
+                # Prefer the richest footer; later sheets rarely have one.
+                if footer_totals is None:
+                    footer_totals = footer
+                else:
+                    for k, v in footer.items():
+                        if v is not None and footer_totals.get(k) is None:
+                            footer_totals[k] = v
+
+        if shared_idx is None:
+            raise ValueError(
+                "Not a recognized container manifest Excel (expected headers: MARKS, T.CTN, T.QTY, …)."
+            )
+        return all_lines, footer_totals, all_subs, all_banners, all_payments
+    finally:
+        wb.close()

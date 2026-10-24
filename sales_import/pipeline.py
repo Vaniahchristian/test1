@@ -263,16 +263,27 @@ def _attach_dry_run_totals_summary(
     summary: dict[str, Any],
     raw_lines: list[dict[str, Any]],
     footer_totals: dict[str, Any] | None,
+    section_subtotals: list[dict[str, Any]] | None = None,
 ) -> None:
-    """Set totals_match / totals_diff using SUM(lines) vs footer (no DB write)."""
+    """Set totals_match / totals_diff using SUM(lines) vs footer/yellows (no DB write)."""
+    from sales_import.totals_reconcile import pick_manifest_expected_totals
+
     computed = sum_item_rows(raw_lines)
-    match, diff = reconcile_totals(
+    expected, expected_source = pick_manifest_expected_totals(
         pdf_footer=footer_totals,
+        section_subtotals=section_subtotals,
         computed=computed,
     )
+    match, diff = reconcile_totals(
+        pdf_footer=expected,
+        computed=computed,
+    )
+    if isinstance(diff, dict):
+        diff = {**diff, "expected_source": expected_source}
     summary["totals_match"] = match
     summary["totals_diff"] = diff if diff else {}
     summary["computed_line_totals"] = {k: v for k, v in computed.items() if v is not None}
+    summary["expected_totals_source"] = expected_source
 
 
 def _utc_iso() -> str:
@@ -338,7 +349,12 @@ def _run_local_tabular_import(
 
     if not write_db:
         summary["raw_lines_sample"] = raw_lines[:3]
-        _attach_dry_run_totals_summary(summary, raw_lines, footer_totals)
+        _attach_dry_run_totals_summary(
+            summary,
+            raw_lines,
+            footer_totals,
+            (tabular_meta or {}).get("section_subtotals") if isinstance(tabular_meta, dict) else None,
+        )
         return summary
 
     sb = get_supabase()
@@ -409,6 +425,9 @@ def _run_local_tabular_import(
         document_id=document_id,
         pdf_footer=footer_totals,
         item_rows=item_rows,
+        section_subtotals=(tabular_meta or {}).get("section_subtotals")
+        if isinstance(tabular_meta, dict)
+        else None,
     )
     summary["totals_match"] = reconciled["totals_match"]
     summary["totals_diff"] = reconciled["totals_diff"]

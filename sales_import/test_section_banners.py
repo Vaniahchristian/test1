@@ -86,12 +86,13 @@ def test_unclassified_banner_gets_other_section() -> None:
     banner_row = ["NEW ORDER-MS-4 GOODS LEFT BEHIND"] + [""] * 18
     stray_row = ["25"] + [""] * 18
 
-    # A real (if unrecognized) heading -> its own "other" bucket, not a guess.
+    # Unrecognized heading while already in the main (shipped) table: keep shipped,
+    # only retitle — flipping to "other" would orphan following product rows.
     lines, _, _, banners, _ = _process_manifest_data_rows([banner_row, item_row], dict(idx))
-    assert lines[0]["section"] == "other"
+    assert lines[0]["section"] == "shipped"
     assert banners[-1] == {
         "text": "NEW ORDER-MS-4 GOODS LEFT BEHIND",
-        "section": "other",
+        "section": "shipped",
         "recognized": False,
     }
 

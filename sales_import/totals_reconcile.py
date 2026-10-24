@@ -63,6 +63,50 @@ def sum_item_rows(item_rows: list[dict[str, Any]]) -> dict[str, float | None]:
     return out
 
 
+def sum_section_subtotals(section_subtotals: list[dict[str, Any]] | None) -> dict[str, float | None]:
+    """Sum yellow section bars — the spreadsheet's own per-block claims."""
+    if not section_subtotals:
+        return {k: None for k in TOTAL_KEYS}
+    return sum_item_rows(section_subtotals)
+
+
+def pick_manifest_expected_totals(
+    *,
+    pdf_footer: dict[str, Any] | None,
+    section_subtotals: list[dict[str, Any]] | None,
+    computed: dict[str, float | None],
+) -> tuple[dict[str, Any] | None, str]:
+    """Choose what line totals should match for a container manifest.
+
+    Printed TOTAL is often only the first block (NEW ORDERS). When yellow
+    section bars exist and their sum agrees with the lines, use that sum so
+    totals_match reflects the whole file the client sees.
+    """
+    yellow = sum_section_subtotals(section_subtotals)
+    yellow_ctn = _to_float(yellow.get("total_cartons"))
+    footer_ctn = _to_float((pdf_footer or {}).get("total_cartons")) if pdf_footer else None
+    computed_ctn = _to_float(computed.get("total_cartons"))
+
+    if yellow_ctn is not None and computed_ctn is not None and _within_tol(yellow_ctn, computed_ctn, "total_cartons"):
+        # Prefer yellow sum as the stored document total when footer is a partial block.
+        if footer_ctn is None or (
+            yellow_ctn > footer_ctn + 0.5 and not _within_tol(footer_ctn, computed_ctn, "total_cartons")
+        ):
+            expected = {k: yellow.get(k) for k in TOTAL_KEYS}
+            if pdf_footer:
+                for k, v in pdf_footer.items():
+                    if k not in expected or expected[k] is None:
+                        expected[k] = v
+            return expected, "section_subtotals_sum"
+        return pdf_footer, "pdf_footer"
+
+    if pdf_footer:
+        return pdf_footer, "pdf_footer"
+    if yellow_ctn is not None:
+        return {k: yellow.get(k) for k in TOTAL_KEYS}, "section_subtotals_sum"
+    return None, "none"
+
+
 def _tolerance_for(key: str) -> tuple[float, float]:
     """Absolute tolerance; relative (fraction of PDF value) for large numbers."""
     env_abs = {
@@ -164,21 +208,35 @@ def upsert_document_totals_row(
     document_id: str,
     pdf_footer: dict[str, Any] | None,
     item_rows: list[dict[str, Any]],
+    section_subtotals: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     computed = sum_item_rows(item_rows)
-    totals_match, totals_diff = reconcile_totals(
+    expected, expected_source = pick_manifest_expected_totals(
         pdf_footer=pdf_footer,
+        section_subtotals=section_subtotals,
         computed=computed,
     )
+    totals_match, totals_diff = reconcile_totals(
+        pdf_footer=expected,
+        computed=computed,
+    )
+    if isinstance(totals_diff, dict):
+        totals_diff = {**totals_diff, "expected_source": expected_source}
+        if pdf_footer and expected_source == "section_subtotals_sum":
+            totals_diff["printed_footer"] = {
+                k: pdf_footer.get(k) for k in TOTAL_KEYS if pdf_footer.get(k) is not None
+            }
 
     row: dict[str, Any] = {
         "document_id": document_id,
-        "total_cartons": _to_float(pdf_footer.get("total_cartons")) if pdf_footer else None,
-        "total_quantity": _to_float(pdf_footer.get("total_quantity")) if pdf_footer else None,
-        "total_cbm": _to_float(pdf_footer.get("total_cbm")) if pdf_footer else None,
-        "total_weight_kg": _to_float(pdf_footer.get("total_weight_kg")) if pdf_footer else None,
-        "total_amount_rmb": _to_float(pdf_footer.get("total_amount_rmb")) if pdf_footer else None,
-        "total_amount_usd": _to_float(pdf_footer.get("total_amount_usd")) if pdf_footer else None,
+        "total_cartons": _to_float((expected or {}).get("total_cartons")),
+        "total_quantity": _to_float((expected or {}).get("total_quantity")),
+        "total_cbm": _to_float((expected or {}).get("total_cbm")),
+        "total_weight_kg": _to_float((expected or {}).get("total_weight_kg")),
+        "total_amount_rmb": _to_float((expected or {}).get("total_amount_rmb")),
+        "total_amount_usd": _to_float((expected or pdf_footer or {}).get("total_amount_usd"))
+        if (expected or pdf_footer)
+        else None,
         "computed_cartons": computed["total_cartons"],
         "computed_quantity": computed["total_quantity"],
         "computed_cbm": computed["total_cbm"],
@@ -193,6 +251,7 @@ def upsert_document_totals_row(
         "totals_match": totals_match,
         "totals_diff": totals_diff,
         "computed": computed,
+        "expected_source": expected_source,
     }
 
 
