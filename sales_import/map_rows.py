@@ -145,6 +145,7 @@ def extraction_row_to_document_item(
         "delivery_no": (raw.get("delivery_no") or "").strip() or None,
         "customer_item_ref": (raw.get("customer_item_ref") or "").strip() or None,
         "photo": (raw.get("photo_url") or "").strip() or None,
+        "photo2": (raw.get("photo2_url") or raw.get("photo2") or "").strip() or None,
         "total_cartons": _optional_float(raw.get("total_cartons")),
         "qty_per_carton": _optional_float(raw.get("qty_per_carton")),
         "total_quantity": _optional_float(raw.get("total_quantity")),

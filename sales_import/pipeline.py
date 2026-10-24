@@ -303,6 +303,7 @@ def _run_local_tabular_import(
     tabular_meta: dict[str, Any] | None = None,
     manifest_payments: list[dict[str, Any]] | None = None,
     source_file_name: str | None = None,
+    images_by_marks: dict[str, list[tuple[bytes, str]]] | None = None,
 ) -> dict[str, Any]:
     """Shared path for Excel / CSV: normalize, footer align, optional Supabase insert."""
     footer_totals = enrich_footer_totals(footer_totals)
@@ -322,6 +323,7 @@ def _run_local_tabular_import(
         "document_id": None,
         "items_inserted": 0,
         "payments_inserted": 0,
+        "photos_attached": 0,
         "totals_match": None,
         "totals_diff": None,
         "extract_summary": None,
@@ -376,6 +378,13 @@ def _run_local_tabular_import(
     if not doc_ins.data:
         raise RuntimeError(f"documents insert failed: {doc_ins}")
     document_id = doc_ins.data[0]["id"]
+
+    if images_by_marks:
+        from sales_import.excel_images import attach_photos_to_lines
+
+        summary["photos_attached"] = attach_photos_to_lines(
+            raw_lines, images_by_marks, sb, document_id
+        )
 
     item_rows: list[dict[str, Any]] = []
     for i, raw in enumerate(raw_lines, start=1):
@@ -621,6 +630,7 @@ def run_import_container_manifest(
     if not path.is_file():
         raise FileNotFoundError(path)
     suf = path.suffix.lower()
+    images_by_marks: dict[str, list[tuple[bytes, str]]] | None = None
     if suf == ".csv":
         raw_lines, footer_totals, section_subtotals, section_banners, manifest_payments = load_container_manifest_lines_from_csv(path)
         serializable: dict[str, Any] = {
@@ -644,6 +654,14 @@ def run_import_container_manifest(
         parser_ver = "container-manifest-openpyxl-v1"
         pipe_ver = "v1-container-manifest-import"
         model_nm = "container-manifest-excel"
+        try:
+            from sales_import.excel_images import extract_images_by_marks
+
+            images_by_marks = extract_images_by_marks(path)
+        except Exception as e:  # noqa: BLE001 — photos are best-effort
+            import logging
+
+            logging.getLogger(__name__).warning("excel image extract skipped: %s", e)
     else:
         raise ValueError(
             "Container manifest import supports .csv, .xlsx, and .xlsm only (not PDF)."
@@ -663,6 +681,7 @@ def run_import_container_manifest(
         tabular_meta={"section_subtotals": section_subtotals, "section_banners": section_banners},
         manifest_payments=manifest_payments,
         source_file_name=source_file_name,
+        images_by_marks=images_by_marks,
     )
 
 
